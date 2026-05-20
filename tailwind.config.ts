@@ -4,6 +4,7 @@ const config: Config = {
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
+    // Note: proyecto no usa directorio src/
   ],
   theme: {
     extend: {

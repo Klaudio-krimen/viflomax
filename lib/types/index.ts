@@ -6,6 +6,9 @@
  * Importado por: API routes, components, pages
  */
 
+// Re-exportar tipos de Supabase
+export type { Database } from './database'
+
 // ============================================================================
 // TIPOS BASE DE NEGOCIO (reflejan tablas SQL)
 // ============================================================================

@@ -198,10 +198,14 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Función helper para obtener el chofer_id del usuario actual
+-- Retorna NULL si chofer_id no está definido o está vacío, evitando error de cast
 CREATE OR REPLACE FUNCTION get_chofer_id()
 RETURNS uuid AS $$
 BEGIN
-  RETURN (auth.jwt() -> 'app_metadata' ->> 'chofer_id')::uuid;
+  RETURN NULLIF(
+    COALESCE(auth.jwt() -> 'app_metadata' ->> 'chofer_id', ''),
+    ''
+  )::uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

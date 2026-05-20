@@ -46,6 +46,11 @@ CREATE INDEX IF NOT EXISTS idx_precios_mayorista_lookup
 CREATE INDEX IF NOT EXISTS idx_precios_detalle_lookup
   ON precios_detalle(producto_id, sector, cantidad_minima);
 
+-- Índice único para evitar precios detalle duplicados
+-- (sector puede ser NULL, se normaliza a '' para el índice)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_precios_detalle_unique
+  ON precios_detalle(producto_id, COALESCE(sector, ''), cantidad_minima);
+
 CREATE INDEX IF NOT EXISTS idx_precios_mayorista_vigencia
   ON precios_mayorista(vigente_desde, vigente_hasta);
 

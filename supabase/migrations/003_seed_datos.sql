@@ -36,15 +36,15 @@ ON CONFLICT (producto_id) DO NOTHING;
 -- 3. EMPRESA MAYORISTA DE EJEMPLO
 -- =======================================
 INSERT INTO empresas (razon_social, rut, activo)
-VALUES ('Empresa Demo SA', '76.000.001-0', true)
-ON CONFLICT DO NOTHING;
+SELECT 'Empresa Demo SA', '76.000.001-0', true
+WHERE NOT EXISTS (SELECT 1 FROM empresas WHERE rut = '76.000.001-0');
 
 -- =======================================
 -- 4. CLIENTE DE PRUEBA
 -- =======================================
 INSERT INTO clientes (nombre, telefono, sector, comuna, tipo_cliente, activo)
-VALUES ('Cliente Demo', '56912345678', 'centro', 'Maipú', 'detalle', true)
-ON CONFLICT DO NOTHING;
+SELECT 'Cliente Demo', '56912345678', 'centro', 'Maipú', 'detalle', true
+WHERE NOT EXISTS (SELECT 1 FROM clientes WHERE telefono = '56912345678');
 
 -- =======================================
 -- 5. PRECIOS MAYORISTA DE EJEMPLO
@@ -88,4 +88,5 @@ WITH
 INSERT INTO precios_detalle (producto_id, sector, cantidad_minima, cantidad_maxima, precio, notas)
 SELECT prod_r20.id, 'centro', 1, NULL, 2500, 'Recarga 20L sector centro' FROM prod_r20
 UNION ALL
-SELECT prod_r10.id, 'centro', 1, NULL, 1800, 'Recarga 10L sector centro' FROM prod_r10;
+SELECT prod_r10.id, 'centro', 1, NULL, 1800, 'Recarga 10L sector centro' FROM prod_r10
+ON CONFLICT (producto_id, COALESCE(sector, ''), cantidad_minima) DO NOTHING;

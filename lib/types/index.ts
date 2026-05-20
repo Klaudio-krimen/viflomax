@@ -142,7 +142,7 @@ export type PedidoItem = {
   pedido_id: string
   producto_id: string
   cantidad: number
-  precio_unitario: number
+  precio_unitario: number  // 0 cuando precio_origen es 'sin_precio'
   precio_origen: OrigenPrecio
   subtotal: number // columna generada en DB
 }
@@ -163,7 +163,7 @@ export type Entrega = {
   latitud: number | null
   longitud: number | null
   bidones_vacios_recibidos: number
-  monto_cobrado: number | null
+  monto_cobrado: number | null  // puede ser null si el cobro está pendiente de confirmar
   metodo_pago: MetodoPago | null
   foto_url: string | null
   observaciones: string | null
@@ -192,6 +192,7 @@ export type Inventario = {
 export type InputCalculoPrecio = {
   productoId: string
   cantidad: number
+  // Nota: clientes tipo 'nuevo' deben pasarse como 'detalle' aquí
   clienteTipo: 'mayorista' | 'detalle'
   empresaId?: string // solo para tipo mayorista
   sector?: string // solo para tipo detalle
@@ -211,21 +212,20 @@ export type ResultadoPrecio = {
 // ============================================================================
 
 /**
- * Respuesta genérica de API
+ * Respuesta genérica de API (unión discriminada)
+ * Previene estados inválidos donde ambos data y error son null
  */
-export type ApiResponse<T> = {
-  data: T | null
-  error: string | null
-}
+export type ApiResponse<T> =
+  | { data: T; error: null }
+  | { data: null; error: string }
 
 /**
- * Respuesta de API para listados
+ * Respuesta de API para listados (unión discriminada)
+ * Previene estados inválidos donde ambos data y error son null
  */
-export type ApiListResponse<T> = {
-  data: T[]
-  total: number
-  error: string | null
-}
+export type ApiListResponse<T> =
+  | { data: T[]; total: number; error: null }
+  | { data: null; total: 0; error: string }
 
 // ============================================================================
 // TIPOS PARA FORMULARIOS
@@ -277,7 +277,7 @@ export type EntregaPendienteOffline = {
   latitud: number | null
   longitud: number | null
   bidones_vacios_recibidos: number
-  monto_cobrado: number
+  monto_cobrado: number  // requerido antes de sincronizar, no puede ser null
   metodo_pago: MetodoPago
   observaciones: string
   foto_data_url?: string // base64, solo local

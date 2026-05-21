@@ -1,8 +1,15 @@
 import type { NextConfig } from 'next'
+import withPWA from '@ducanh2912/next-pwa'
 
 const nextConfig: NextConfig = {
   // Sin configuraciones especiales por ahora
-  // next-pwa se agrega en T11
 }
 
-export default nextConfig
+export default withPWA({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  workboxOptions: {
+    skipWaiting: true,
+  },
+})(nextConfig)

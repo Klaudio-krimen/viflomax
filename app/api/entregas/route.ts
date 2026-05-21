@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
 
   let body: {
     pedido_id?: string
+    chofer_id?: string
     latitud?: number
     longitud?: number
     bidones_vacios_recibidos?: number
@@ -151,13 +152,28 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Obtener el chofer_id del usuario autenticado
-  const choferIdMeta = user.app_metadata?.chofer_id as string | undefined
-  if (!choferIdMeta) {
-    return NextResponse.json(
-      { data: null, error: 'Chofer no configurado en el sistema' } as ApiResponse<Entrega>,
-      { status: 403 }
-    )
+  // Obtener el chofer_id según el rol
+  let choferIdFinal: string
+
+  if (rol === 'admin') {
+    // Admin puede especificar el chofer_id en el body, o crear entrega sin chofer
+    choferIdFinal = body.chofer_id ?? user.app_metadata?.chofer_id
+    if (!choferIdFinal) {
+      return NextResponse.json(
+        { data: null, error: 'Se requiere chofer_id para registrar la entrega' } as ApiResponse<never>,
+        { status: 400 }
+      )
+    }
+  } else {
+    // Chofer usa su propio ID del app_metadata
+    const choferIdMeta = user.app_metadata?.chofer_id as string | undefined
+    if (!choferIdMeta) {
+      return NextResponse.json(
+        { data: null, error: 'Chofer no configurado en el sistema' } as ApiResponse<Entrega>,
+        { status: 403 }
+      )
+    }
+    choferIdFinal = choferIdMeta
   }
 
   // Registrar la entrega (el trigger SQL actualiza el pedido a 'entregado')
@@ -165,7 +181,7 @@ export async function POST(request: NextRequest) {
     .from('entregas')
     .insert({
       pedido_id: body.pedido_id,
-      chofer_id: choferIdMeta,
+      chofer_id: choferIdFinal,
       latitud: body.latitud ?? null,
       longitud: body.longitud ?? null,
       bidones_vacios_recibidos: body.bidones_vacios_recibidos ?? 0,
@@ -190,21 +206,16 @@ export async function POST(request: NextRequest) {
     .eq('pedido_id', body.pedido_id)
 
   if (!itemsError && pedidoItems && pedidoItems.length > 0) {
-    // Decrementar stock_bodega por cada item del pedido
+    // Decrementar stock atómicamente para cada item
     for (const item of pedidoItems) {
-      // Obtener stock actual
-      const { data: inventario } = await supabase
-        .from('inventario')
-        .select('id, stock_bodega')
-        .eq('producto_id', item.producto_id)
-        .single()
+      const { error: decrementoError } = await supabase.rpc('decrementar_stock_producto', {
+        p_producto_id: item.producto_id,
+        p_cantidad: item.cantidad,
+      })
 
-      if (inventario) {
-        const nuevoStock = Math.max(0, inventario.stock_bodega - item.cantidad)
-        await supabase
-          .from('inventario')
-          .update({ stock_bodega: nuevoStock })
-          .eq('id', inventario.id)
+      if (decrementoError) {
+        console.error(`Error al decrementar stock para producto ${item.producto_id}:`, decrementoError.message)
+        // No fallar la entrega por error de stock — registrar para seguimiento
       }
     }
   }

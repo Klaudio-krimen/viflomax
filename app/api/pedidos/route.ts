@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
   // Determinar tipo de cliente para el cálculo de precios
   let clienteTipo: 'mayorista' | 'detalle' = 'detalle'
   let sector: string | undefined
+  let clienteData: Pick<Cliente, 'tipo_cliente' | 'sector' | 'empresa_id'> | null = null
 
   if (body.cliente_id) {
     const { data: cliente } = await supabase
@@ -143,6 +144,7 @@ export async function POST(request: NextRequest) {
       .single<Pick<Cliente, 'tipo_cliente' | 'sector' | 'empresa_id'>>()
 
     if (cliente) {
+      clienteData = cliente
       if (cliente.tipo_cliente === 'mayorista') {
         clienteTipo = 'mayorista'
       }
@@ -181,8 +183,8 @@ export async function POST(request: NextRequest) {
       productoId: item.producto_id,
       cantidad: item.cantidad,
       clienteTipo,
-      empresaId: body.empresa_id,
-      sector,
+      empresaId: body.empresa_id ?? clienteData?.empresa_id ?? undefined,
+      sector: clienteData?.sector ?? sector,
     })
 
     if (resultado.origen === 'sin_precio') {
@@ -208,59 +210,46 @@ export async function POST(request: NextRequest) {
     notasFinales = notasFinales ? `${notasFinales}\n${notaEspecial}` : notaEspecial
   }
 
-  // Insertar pedido
-  const { data: pedidoCreado, error: pedidoError } = await supabase
-    .from('pedidos')
-    .insert({
-      cliente_id: body.cliente_id ?? null,
-      empresa_id: body.empresa_id ?? null,
-      chofer_id: body.chofer_id ?? null,
-      fecha_entrega_programada: body.fecha_entrega_programada ?? null,
-      estado: 'nuevo',
-      origen: body.origen,
-      monto_total: montoTotal,
-      notas: notasFinales,
-    })
-    .select()
-    .single()
-
-  if (pedidoError || !pedidoCreado) {
-    return NextResponse.json(
-      { data: null, error: 'Error al crear el pedido' } as ApiResponse<PedidoConDetalle>,
-      { status: 500 }
-    )
+  const pedidoData = {
+    cliente_id: body.cliente_id ?? null,
+    empresa_id: body.empresa_id ?? null,
+    chofer_id: body.chofer_id ?? null,
+    fecha_entrega_programada: body.fecha_entrega_programada ?? null,
+    estado: 'nuevo',
+    origen: body.origen,
+    monto_total: montoTotal,
+    notas: notasFinales,
   }
 
-  // Insertar items del pedido
-  const itemsParaInsertar = itemsConPrecio.map((item) => ({
-    pedido_id: pedidoCreado.id,
+  const itemsData = itemsConPrecio.map((item) => ({
     producto_id: item.producto_id,
     cantidad: item.cantidad,
     precio_unitario: item.precio_unitario,
     precio_origen: item.precio_origen,
   }))
 
-  const { data: itemsCreados, error: itemsError } = await supabase
-    .from('pedido_items')
-    .insert(itemsParaInsertar)
-    .select()
+  const { data: rpcResult, error: rpcError } = await supabase.rpc('crear_pedido_con_items', {
+    p_pedido: pedidoData,
+    p_items: itemsData,
+  })
 
-  if (itemsError) {
-    // Limpiar el pedido si falló la inserción de items
-    await supabase.from('pedidos').delete().eq('id', pedidoCreado.id)
+  if (rpcError || !rpcResult) {
     return NextResponse.json(
-      { data: null, error: 'Error al crear los items del pedido' } as ApiResponse<PedidoConDetalle>,
+      { data: null, error: 'Error al crear el pedido' } as ApiResponse<never>,
       { status: 500 }
     )
   }
 
-  const respuesta: PedidoConDetalle = {
-    ...(pedidoCreado as Pedido),
-    items: itemsCreados as PedidoConDetalle['items'],
-  }
+  // Retornar el pedido creado con sus items
+  const pedidoId = (rpcResult as { id: string }).id
+  const { data: pedidoCreado } = await supabase
+    .from('pedidos')
+    .select('*, pedido_items(*)')
+    .eq('id', pedidoId)
+    .single()
 
   return NextResponse.json(
-    { data: respuesta, error: null } as ApiResponse<PedidoConDetalle>,
+    { data: pedidoCreado, error: null } as ApiResponse<typeof pedidoCreado>,
     { status: 201 }
   )
 }

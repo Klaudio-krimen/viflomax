@@ -73,26 +73,12 @@ async function calcularPrecioMayorista(
 
   if (!tramos || tramos.length === 0) return null
 
-  // El primer resultado es el tramo con mayor volumen_minimo que aplica
-  const tramo = tramos[0]
+  const tramo = tramos.find(
+    (t: { volumen_minimo: number; volumen_maximo: number | null }) =>
+      cantidad >= t.volumen_minimo && (t.volumen_maximo === null || cantidad <= t.volumen_maximo)
+  )
 
-  // Verificar que la cantidad no excede el volumen_maximo (si existe)
-  if (tramo.volumen_maximo !== null && cantidad > tramo.volumen_maximo) {
-    // Buscar el tramo que cubre esta cantidad exacta
-    const tramoExacto = tramos.find(
-      (t: { volumen_minimo: number; volumen_maximo: number | null }) =>
-        cantidad >= t.volumen_minimo && (t.volumen_maximo === null || cantidad <= t.volumen_maximo)
-    )
-    if (!tramoExacto) return null
-
-    return {
-      precio: Number(tramoExacto.precio),
-      origen: 'mayorista',
-      tramo_aplicado: tramoExacto.volumen_maximo
-        ? `${tramoExacto.volumen_minimo}-${tramoExacto.volumen_maximo} unidades`
-        : `${tramoExacto.volumen_minimo}+ unidades`,
-    }
-  }
+  if (!tramo) return null
 
   return {
     precio: Number(tramo.precio),
@@ -139,7 +125,7 @@ async function calcularPrecioDetalle(
 
   return {
     precio: Number(tramo.precio),
-    origen: sector ? 'detalle_sector' : 'base',
+    origen: sector ? 'detalle_sector' : 'detalle_generico',
     tramo_aplicado: tramo.cantidad_maxima
       ? `${tramo.cantidad_minima}-${tramo.cantidad_maxima} unidades`
       : `${tramo.cantidad_minima}+ unidades`,

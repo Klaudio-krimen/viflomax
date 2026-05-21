@@ -132,7 +132,7 @@ export type Pedido = {
 /**
  * Origen del precio aplicado en un item de pedido
  */
-export type OrigenPrecio = 'mayorista' | 'detalle_sector' | 'base' | 'manual' | 'sin_precio'
+export type OrigenPrecio = 'mayorista' | 'detalle_sector' | 'detalle_generico' | 'base' | 'manual' | 'sin_precio'
 
 /**
  * Item de pedido (línea de producto en un pedido)

@@ -75,19 +75,19 @@ export function OrderForm() {
 
     try {
       const body = {
-        origen: 'web',
-        items: itemsConCantidad,
-        cliente: {
-          nombre: nombre.trim(),
-          telefono: telefono.trim(),
-          email: email.trim() || undefined,
-          direccion: direccion.trim(),
-          comuna,
-        },
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        email: email.trim() || undefined,
+        direccion: direccion.trim(),
+        comuna,
+        items: itemsConCantidad.map((item) => ({
+          productoId: item.nombre,
+          cantidad: item.cantidad,
+        })),
         notas: notas.trim() || undefined,
       }
 
-      const res = await fetch('/api/pedidos', {
+      const res = await fetch('/api/pedidos/publico', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

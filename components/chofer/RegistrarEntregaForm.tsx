@@ -245,11 +245,11 @@ export function RegistrarEntregaForm({ pedido }: Props) {
                   (pedido: {item.cantidad_pedida})
                 </span>
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-5">
                 <button
                   type="button"
                   onClick={() => cambiarCantidad(idx, -1)}
-                  className="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+                  className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
                   aria-label={`Reducir cantidad de ${item.nombre_producto}`}
                 >
                   −
@@ -260,7 +260,7 @@ export function RegistrarEntregaForm({ pedido }: Props) {
                 <button
                   type="button"
                   onClick={() => cambiarCantidad(idx, 1)}
-                  className="w-11 h-11 rounded-xl bg-viflomax-verde hover:bg-viflomax-verde-claro text-white font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+                  className="w-12 h-12 rounded-xl bg-viflomax-verde hover:bg-viflomax-verde-claro text-white font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
                   aria-label={`Aumentar cantidad de ${item.nombre_producto}`}
                 >
                   +
@@ -279,11 +279,11 @@ export function RegistrarEntregaForm({ pedido }: Props) {
           </svg>
           Bidones vacíos recibidos
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-5">
           <button
             type="button"
             onClick={() => setBidiVacios((v) => Math.max(0, v - 1))}
-            className="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+            className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
             aria-label="Reducir bidones vacíos"
           >
             −
@@ -294,7 +294,7 @@ export function RegistrarEntregaForm({ pedido }: Props) {
           <button
             type="button"
             onClick={() => setBidiVacios((v) => v + 1)}
-            className="w-11 h-11 rounded-xl bg-viflomax-azul hover:bg-viflomax-azul-oscuro text-white font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+            className="w-12 h-12 rounded-xl bg-viflomax-azul hover:bg-viflomax-azul-oscuro text-white font-bold text-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
             aria-label="Aumentar bidones vacíos"
           >
             +

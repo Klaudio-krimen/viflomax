@@ -86,7 +86,7 @@ WITH
     SELECT id FROM productos WHERE nombre = 'Recarga 10 Litros' LIMIT 1
   )
 INSERT INTO precios_detalle (producto_id, sector, cantidad_minima, cantidad_maxima, precio, notas)
-SELECT prod_r20.id, 'centro', 1, NULL, 2500, 'Recarga 20L sector centro' FROM prod_r20
+SELECT prod_r20.id, 'centro', 1, NULL::INTEGER, 2500, 'Recarga 20L sector centro' FROM prod_r20
 UNION ALL
-SELECT prod_r10.id, 'centro', 1, NULL, 1800, 'Recarga 10L sector centro' FROM prod_r10
+SELECT prod_r10.id, 'centro', 1, NULL::INTEGER, 1800, 'Recarga 10L sector centro' FROM prod_r10
 ON CONFLICT (producto_id, COALESCE(sector, ''), cantidad_minima) DO NOTHING;

@@ -18,20 +18,20 @@ function AlertaStock({
 }) {
   if (stock <= 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-red-700 bg-red-50 rounded-full px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-rose-700 bg-rose-50 rounded-full px-2 py-0.5">
         <span aria-hidden="true">&#9888;</span> Sin stock
       </span>
     )
   }
   if (stock <= minimo) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-yellow-700 bg-yellow-50 rounded-full px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-amber-700 bg-amber-50 rounded-full px-2 py-0.5">
         <span aria-hidden="true">&#9888;</span> Stock bajo
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-green-700 bg-green-50 rounded-full px-2 py-0.5">
+    <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5">
       <span aria-hidden="true">&#10003;</span> OK
     </span>
   )
@@ -60,7 +60,7 @@ export default async function InventarioChoferPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/chofer"
-          className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
           aria-label="Volver a mis entregas"
         >
           <svg

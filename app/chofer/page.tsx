@@ -76,38 +76,48 @@ export default async function ChoferPage() {
 
       {/* Contador + acceso a inventario */}
       <div className="flex items-center justify-between">
-        <span className="font-outfit text-base font-semibold text-gray-700">
+        <span
+          className={[
+            'font-outfit text-base font-semibold',
+            totalPendientes > 0 ? 'text-viflomax-azul-oscuro' : 'text-gray-500',
+          ].join(' ')}
+        >
           {totalPendientes === 0
             ? 'Sin entregas pendientes'
             : `${totalPendientes} entrega${totalPendientes !== 1 ? 's' : ''} pendiente${totalPendientes !== 1 ? 's' : ''}`}
         </span>
         <Link
           href="/chofer/inventario"
-          className="text-sm font-outfit text-viflomax-azul-oscuro underline underline-offset-2"
+          className="inline-flex items-center gap-1.5 text-sm font-outfit font-semibold text-viflomax-azul-oscuro bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
         >
-          Ver inventario
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          Inventario
         </Link>
       </div>
 
       {/* Lista de pedidos */}
       {pedidosList.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-16 w-16 text-gray-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-          <p className="font-outfit text-gray-500 text-lg font-medium">
+          <div className="w-20 h-20 rounded-full bg-viflomax-verde bg-opacity-10 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-10 w-10 text-viflomax-verde opacity-60"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+          </div>
+          <p className="font-outfit text-gray-600 text-lg font-medium">
             No tienes entregas asignadas hoy
           </p>
           <p className="font-outfit text-gray-400 text-sm">

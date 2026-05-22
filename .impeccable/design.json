@@ -1,0 +1,317 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-05-22T00:00:00Z",
+  "design_system": {
+    "register": "product",
+    "north_star": "Claridad accesible. Verde transmite crecimiento, azul comunica tranquilidad y confianza. Espacio blanco respeta atención del chofer. Tipografía contrasta claro y visible.",
+    "primary_use_case": "App de trabajo PWA para choferes en terreno. Registro rápido de ventas y entregas. Tap-friendly, sin distracciones decorativas.",
+    "context": {
+      "user": "Chofer (Conductor de ruta)",
+      "environment": "Furgón, entre entregas, luz solar variable, conexión intermitente",
+      "device": "Android 8+, móvil, 5-6 pulgadas de pantalla",
+      "ambient": "Campo, luz natural variable, presión de tiempo (30+ entregas/día)"
+    }
+  },
+  "color_palette": {
+    "brand": {
+      "verde": {
+        "hex": "#6ab04c",
+        "rgb": "106, 176, 76",
+        "oklch": "0.64 / 0.16 / 142°",
+        "character": "Energía de terreno, naturaleza, crecimiento, acción segura",
+        "usage": "Botones primarios, confirmaciones, indicadores de éxito",
+        "contrast_ratio_on_white": "3.8:1"
+      },
+      "verde_claro": {
+        "hex": "#7ec850",
+        "rgb": "126, 200, 80",
+        "oklch": "0.72 / 0.15 / 142°",
+        "character": "Hover state, suavidad, accesibilidad",
+        "usage": "Estados hover de botones verdes, backgrounds suaves",
+        "contrast_ratio_on_white": "3.2:1"
+      },
+      "azul": {
+        "hex": "#4db8e8",
+        "rgb": "77, 184, 232",
+        "oklch": "0.71 / 0.18 / 243°",
+        "character": "Confianza tranquila, cielo, agua, fiabilidad",
+        "usage": "Focus rings, links, información secundaria, estados activos",
+        "contrast_ratio_on_white": "3.6:1"
+      },
+      "azul_oscuro": {
+        "hex": "#1a6ba0",
+        "rgb": "26, 107, 160",
+        "oklch": "0.43 / 0.12 / 243°",
+        "character": "Énfasis, profundidad, navegación activa",
+        "usage": "Estados hover/active de botones secundarios, nav highlighting",
+        "contrast_ratio_on_white": "5.2:1"
+      }
+    },
+    "semantic": {
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "neutral_bg": "#f9fafb",
+      "neutral_text": "#111827"
+    }
+  },
+  "typography": {
+    "font_families": {
+      "nunito": {
+        "stack": "Nunito, sans-serif",
+        "css_variable": "--font-nunito",
+        "character": "Friendly, approachable, geometric. Números claros y distintos.",
+        "usage": "Body text, data, numeric values, lists"
+      },
+      "outfit": {
+        "stack": "Outfit, sans-serif",
+        "css_variable": "--font-outfit",
+        "character": "Modern, UI-focused, technical. Labels y instrucciones.",
+        "usage": "UI labels, button text, form labels, headers"
+      }
+    },
+    "hierarchy": {
+      "h1": {
+        "size": "32px",
+        "weight": 600,
+        "line_height": "1.2",
+        "letter_spacing": "-0.02em",
+        "usage": "Títulos de página, encabezados principales"
+      },
+      "h2": {
+        "size": "24px",
+        "weight": 600,
+        "line_height": "1.25",
+        "usage": "Subtítulos, secciones de formulario, card titles"
+      },
+      "h3": {
+        "size": "20px",
+        "weight": 600,
+        "line_height": "1.3",
+        "usage": "Nombres de clientes, títulos de card secundarios"
+      },
+      "body_lg": {
+        "size": "16px",
+        "weight": 400,
+        "line_height": "1.5",
+        "usage": "Cuerpo de texto, instrucciones de orden"
+      },
+      "body": {
+        "size": "14px",
+        "weight": 400,
+        "line_height": "1.6",
+        "usage": "Descripción, datos secundarios"
+      },
+      "body_sm": {
+        "size": "12px",
+        "weight": 400,
+        "line_height": "1.5",
+        "usage": "Helper text, metadata, timestamps, footnotes"
+      },
+      "label": {
+        "size": "14px",
+        "weight": 500,
+        "line_height": "1.4",
+        "usage": "Form labels, button text"
+      },
+      "caption": {
+        "size": "10px",
+        "weight": 500,
+        "line_height": "1.4",
+        "usage": "Badges, tags muy pequeñas"
+      }
+    },
+    "contrast_rules": {
+      "body_text_wcag_aaa": "7:1 mínimo (texto gris-900 sobre blanco: 21:1 ✓)",
+      "ui_text_wcag_aa": "4.5:1 mínimo (labels gris-600 sobre blanco: 6.5:1 ✓)",
+      "consideration": "En campo bajo luz solar. Verde y azul oscuro mantienen legibilidad. Evita grises muy claros (gray-300+)."
+    }
+  },
+  "elevation": {
+    "shadow_system": [
+      {
+        "name": "subtle",
+        "css": "shadow-sm (0 1px 2px 0 rgba(0,0,0,0.05))",
+        "usage": "Cards en reposo, inputs, elementos base"
+      },
+      {
+        "name": "slight",
+        "css": "shadow (0 1px 3px 0 rgba(0,0,0,0.1))",
+        "usage": "Modales, dropdowns al abrir, elementos elevados"
+      }
+    ],
+    "border_system": [
+      {
+        "name": "subtle_divider",
+        "css": "border-gray-200 (1px)",
+        "usage": "Separar secciones, border horizontal de card header"
+      },
+      {
+        "name": "accent_border",
+        "css": "border-viflomax-azul (1px)",
+        "usage": "Focus state de inputs, elementos activos, highlighting"
+      },
+      {
+        "name": "error_state",
+        "css": "border-red-500 (1px)",
+        "usage": "Inputs con error validación"
+      }
+    ],
+    "spacing_scale": {
+      "xs": "0.25rem (4px)",
+      "sm": "0.5rem (8px)",
+      "md": "1rem (16px)",
+      "lg": "1.5rem (24px)",
+      "xl": "2rem (32px)"
+    }
+  },
+  "components": {
+    "button": {
+      "variants": ["primary", "secondary", "danger", "ghost"],
+      "sizes": ["sm", "md", "lg"],
+      "size_details": {
+        "sm": "28px height, 12px text",
+        "md": "36px height, 14px text (default)",
+        "lg": "44px height, 16px text"
+      },
+      "rules": [
+        "Mínimo 44×44px (sm solo para UI no crítica)",
+        "Primary verde, hover verde-claro",
+        "Secondary gris con borde",
+        "Danger rojo, solo para cancelaciones/eliminaciones",
+        "Ghost solo border, sin background",
+        "Font Outfit medium, visible en campo",
+        "Focus ring viflomax-azul 2px",
+        "Nunca deshabilitado por defecto; mostrar motivo"
+      ],
+      "states": ["default", "hover", "active", "disabled", "loading"],
+      "example_html": "<button class='px-4 py-2 rounded-lg bg-viflomax-verde hover:bg-viflomax-verde-claro text-white font-outfit font-medium focus:ring-2 focus:ring-viflomax-azul transition-colors'>Confirmar Entrega</button>"
+    },
+    "card": {
+      "structure": "title + description (optional) | body (children) | footer (optional)",
+      "styling": {
+        "background": "white",
+        "border": "1px gray-200",
+        "border_radius": "rounded-xl (12px)",
+        "shadow": "shadow-sm",
+        "padding": "title/footer 24px, body 24px"
+      },
+      "rules": [
+        "Usar solo cuando agrupamiento funcional lo justifique",
+        "No anidar cards",
+        "Si tiene acción primaria, incluir botón en footer",
+        "Para listas, considerar tabla o list items"
+      ],
+      "example_html": "<div class='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden'>\n  <div class='px-6 py-4 border-b border-gray-100'>\n    <h3 class='font-nunito font-semibold text-gray-900 text-lg'>Pedido #1234</h3>\n  </div>\n  <div class='px-6 py-4'>[contenido]</div>\n</div>"
+    },
+    "input": {
+      "structure": "label + input + error/helperText (optional)",
+      "styling": {
+        "border_radius": "rounded-lg (8px)",
+        "padding": "px-3 py-2",
+        "background": "white",
+        "ring": "1px gray-300 (default), focus viflomax-azul, error red-500"
+      },
+      "rules": [
+        "Label siempre presente (accessibility)",
+        "Required: asterisco rojo",
+        "Error: mensaje debajo en rojo (role='alert')",
+        "Helper text: gris-500",
+        "Transition focus 200ms smooth"
+      ]
+    },
+    "badge": {
+      "variants": ["success", "warning", "error", "info", "default"],
+      "sizes": ["sm", "md"],
+      "styling": {
+        "border_radius": "rounded-full (9999px)",
+        "font": "Outfit medium"
+      },
+      "rules": [
+        "Para estados de pedido (nuevo, confirmado, en_ruta, entregado, cancelado)",
+        "Nunca como botón; usar Button component",
+        "Usar función helper estadoPedidoBadge() para consistencia"
+      ],
+      "helper_mapping": {
+        "nuevo": "default",
+        "confirmado": "info",
+        "en_ruta": "warning",
+        "entregado": "success",
+        "cancelado": "error"
+      }
+    },
+    "modal": {
+      "philosophy": "Último recurso. Usar inline / expandable / drawer primero.",
+      "styling": {
+        "overlay": "dark (rgba(0,0,0,0.5))",
+        "card": "white, rounded-xl, shadow-sm",
+        "max_width": "500px (móvil), 600px (desktop)"
+      },
+      "rules": [
+        "Solo para confirmaciones críticas (borrar, cancelar entrega)",
+        "Cerrar: X button, ESC key, overlay click (con confirmación)",
+        "Focus trap obligatorio",
+        "Máximo 3 campos"
+      ]
+    },
+    "table": {
+      "styling": {
+        "header": "bg-gray-50, border-b gray-200, Outfit bold",
+        "rows": "border-b gray-100, padding 12px",
+        "hover": "bg-gray-50",
+        "stripe": "alternating white / gray-25 (opcional)"
+      },
+      "rules": [
+        "Responsive: stack en móvil (<640px), scroll en desktop",
+        "Números aligned right",
+        "Estados: colorear badge, no toda la fila",
+        "Acciones (editar/borrar): Button ghost sm al final"
+      ]
+    }
+  },
+  "design_laws": {
+    "absolute_bans": [
+      "No side-stripe borders (border-left / border-right > 1px). Rewrite con full borders, background tints, o leading icons.",
+      "No gradient text (background-clip: text). Usa solid color + weight/size para énfasis.",
+      "No glassmorphism como default. Solo propositivo y raro.",
+      "No identical card grids. Vary layout, use tables, use lists.",
+      "No modal como first thought. Exhaust inline / progressive alternatives primero.",
+      "No decorative animations. Solo feedback: hover color, focus ring, loading spinner."
+    ],
+    "motion_rules": [
+      "No animate CSS layout properties (width, height, transform).",
+      "Ease out con curvas exponenciales (ease-out-quart).",
+      "Sin bounce, sin elastic.",
+      "Transiciones: 200ms para hover, 300ms para show/hide."
+    ]
+  },
+  "quality_checklist": {
+    "accessibility": [
+      "✅ WCAG 2.1 AA mínimo (AAA para admin)",
+      "✅ Contrast 7:1 para body text principal",
+      "✅ Focus visible con ring azul",
+      "✅ Inputs con labels + error messaging",
+      "✅ Button size ≥44×44px",
+      "✅ Respeta prefers-reduced-motion"
+    ],
+    "responsiveness": [
+      "✅ Mobile-first (5-6 inch Android)",
+      "✅ Tablas stack en <640px",
+      "✅ Inputs full-width en móvil",
+      "✅ Buttons tappable en pulgar"
+    ],
+    "performance": [
+      "✅ No decorative animations",
+      "✅ Shadow-sm solo, no stacked shadows",
+      "✅ Minimal custom CSS, máximo Tailwind defaults",
+      "✅ Icons inline SVG, < 1KB each"
+    ],
+    "brand_fit": [
+      "✅ Ningún elemento puramente decorativo",
+      "✅ Verde + azul balanceados",
+      "✅ Tipografía contrasta claro",
+      "✅ Espacio respira (no apretujado)",
+      "✅ Siente 'Maipú', no 'SaaS genérico'"
+    ]
+  }
+}

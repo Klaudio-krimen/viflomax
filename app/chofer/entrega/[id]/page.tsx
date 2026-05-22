@@ -64,7 +64,7 @@ export default async function EntregaPage({ params }: PageProps) {
       <div className="flex items-center gap-3">
         <Link
           href="/chofer"
-          className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
           aria-label="Volver a mis entregas"
         >
           <svg

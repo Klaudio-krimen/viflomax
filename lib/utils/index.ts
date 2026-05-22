@@ -46,13 +46,13 @@ export function formatHora(fecha: string | Date): string {
  */
 export function colorEstado(estado: string): string {
   const colores: Record<string, string> = {
-    nuevo: 'bg-gray-100 text-gray-700',
-    confirmado: 'bg-blue-100 text-blue-700',
-    en_ruta: 'bg-yellow-100 text-yellow-700',
-    entregado: 'bg-green-100 text-green-700',
-    cancelado: 'bg-red-100 text-red-700',
+    nuevo:       'bg-slate-100 text-slate-600',
+    confirmado:  'bg-sky-50 text-sky-700',
+    en_ruta:     'bg-amber-50 text-amber-700',
+    entregado:   'bg-emerald-50 text-emerald-800',
+    cancelado:   'bg-rose-50 text-rose-700',
   }
-  return colores[estado] ?? 'bg-gray-100 text-gray-700'
+  return colores[estado] ?? 'bg-slate-100 text-slate-600'
 }
 
 // ============================================================================

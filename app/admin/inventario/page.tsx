@@ -8,13 +8,13 @@ export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Inventario — Viflomax Admin' }
 
 export type InventarioConProducto = Inventario & {
-  producto: Pick<Producto, 'id' | 'nombre' | 'categoria'> | null
+  producto: Pick<Producto, 'id' | 'nombre' | 'categoria' | 'precio_base'> | null
 }
 
 export default async function InventarioPage() {
   const inventario = await db.inventario.findMany({
     orderBy: { updated_at: 'desc' },
-    include: { producto: { select: { id: true, nombre: true, categoria: true } } },
+    include: { producto: { select: { id: true, nombre: true, categoria: true, precio_base: true } } },
   })
 
   const inventarioList = inventario.map((i) => ({

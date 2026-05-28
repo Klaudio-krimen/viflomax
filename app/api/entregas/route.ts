@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getToken } from 'next-auth/jwt'
+import { db } from '@/lib/db'
 import type { ApiResponse, ApiListResponse, Entrega } from '@/lib/types'
 
 /**
@@ -9,63 +10,66 @@ import type { ApiResponse, ApiListResponse, Entrega } from '@/lib/types'
  * - Chofer: solo las entregas registradas por él
  */
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin' && rol !== 'chofer') {
+  const role = token.role as string
+  if (role !== 'admin' && role !== 'chofer') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
     )
   }
 
-  let query = supabase
-    .from('entregas')
-    .select('*', { count: 'exact' })
-    .order('timestamp_entrega', { ascending: false })
-
   // Chofer solo ve sus propias entregas
-  if (rol === 'chofer') {
-    const choferIdMeta = user.app_metadata?.chofer_id as string | undefined
-    if (!choferIdMeta) {
+  let choferIdFilter: string | undefined
+  if (role === 'chofer') {
+    const chofer = await db.chofer.findUnique({
+      where: { user_id: token.id as string },
+      select: { id: true },
+    })
+    if (!chofer) {
       return NextResponse.json(
         { data: null, total: 0, error: 'Chofer no configurado' } as ApiListResponse<Entrega>,
         { status: 403 }
       )
     }
-    query = query.eq('chofer_id', choferIdMeta)
+    choferIdFilter = chofer.id
   }
 
-  const { data, error, count } = await query
+  try {
+    const where = choferIdFilter ? { chofer_id: choferIdFilter } : {}
 
-  if (error) {
+    const [entregas, total] = await Promise.all([
+      db.entrega.findMany({ where, orderBy: { timestamp_entrega: 'desc' } }),
+      db.entrega.count({ where }),
+    ])
+
+    return NextResponse.json(
+      { data: entregas as unknown as Entrega[], total, error: null } as ApiListResponse<Entrega>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, total: 0, error: 'Error al obtener entregas' } as ApiListResponse<Entrega>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as Entrega[], total: count ?? 0, error: null } as ApiListResponse<Entrega>
-  )
 }
 
 /**
  * POST /api/entregas
  * Registrar una entrega (solo chofer o admin).
+ * Actualiza el estado del pedido a 'entregado' y decrementa el stock.
  *
  * Body:
  * {
  *   pedido_id: uuid,
+ *   chofer_id?: uuid (requerido si rol es admin),
  *   latitud?: number,
  *   longitud?: number,
  *   bidones_vacios_recibidos: number,
@@ -73,23 +77,18 @@ export async function GET(request: NextRequest) {
  *   metodo_pago?: 'efectivo' | 'transferencia' | 'pendiente',
  *   observaciones?: string
  * }
- *
- * Nota: el trigger SQL en la base de datos actualiza el estado del pedido a 'entregado'.
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin' && rol !== 'chofer') {
+  const role = token.role as string
+  if (role !== 'admin' && role !== 'chofer') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -124,14 +123,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Verificar que el pedido existe y no está ya entregado
-  const { data: pedido, error: pedidoError } = await supabase
-    .from('pedidos')
-    .select('id, estado')
-    .eq('id', body.pedido_id)
-    .single()
+  // Verificar que el pedido existe y no está ya entregado o cancelado
+  const pedido = await db.pedido.findUnique({
+    where: { id: body.pedido_id },
+    select: { id: true, estado: true },
+  })
 
-  if (pedidoError || !pedido) {
+  if (!pedido) {
     return NextResponse.json(
       { data: null, error: 'Pedido no encontrado' } as ApiResponse<Entrega>,
       { status: 404 }
@@ -155,73 +153,83 @@ export async function POST(request: NextRequest) {
   // Obtener el chofer_id según el rol
   let choferIdFinal: string
 
-  if (rol === 'admin') {
-    // Admin puede especificar el chofer_id en el body, o crear entrega sin chofer
-    choferIdFinal = body.chofer_id ?? user.app_metadata?.chofer_id
-    if (!choferIdFinal) {
+  if (role === 'admin') {
+    if (!body.chofer_id) {
       return NextResponse.json(
         { data: null, error: 'Se requiere chofer_id para registrar la entrega' } as ApiResponse<never>,
         { status: 400 }
       )
     }
+    choferIdFinal = body.chofer_id
   } else {
-    // Chofer usa su propio ID del app_metadata
-    const choferIdMeta = user.app_metadata?.chofer_id as string | undefined
-    if (!choferIdMeta) {
+    // Chofer usa su propio registro en la tabla chofer
+    const chofer = await db.chofer.findUnique({
+      where: { user_id: token.id as string },
+      select: { id: true },
+    })
+    if (!chofer) {
       return NextResponse.json(
         { data: null, error: 'Chofer no configurado en el sistema' } as ApiResponse<Entrega>,
         { status: 403 }
       )
     }
-    choferIdFinal = choferIdMeta
+    choferIdFinal = chofer.id
   }
 
-  // Registrar la entrega (el trigger SQL actualiza el pedido a 'entregado')
-  const { data: entregaCreada, error: entregaError } = await supabase
-    .from('entregas')
-    .insert({
-      pedido_id: body.pedido_id,
-      chofer_id: choferIdFinal,
-      latitud: body.latitud ?? null,
-      longitud: body.longitud ?? null,
-      bidones_vacios_recibidos: body.bidones_vacios_recibidos ?? 0,
-      monto_cobrado: body.monto_cobrado ?? null,
-      metodo_pago: body.metodo_pago ?? null,
-      observaciones: body.observaciones ?? null,
-    })
-    .select()
-    .single()
+  // Crear entrega, actualizar pedido y decrementar stock en una transacción
+  try {
+    const entregaCreada = await db.$transaction(async (tx) => {
+      // Crear la entrega
+      const entrega = await tx.entrega.create({
+        data: {
+          pedido_id: body.pedido_id!,
+          chofer_id: choferIdFinal,
+          latitud: body.latitud ?? null,
+          longitud: body.longitud ?? null,
+          bidones_vacios_recibidos: body.bidones_vacios_recibidos ?? 0,
+          monto_cobrado: body.monto_cobrado ?? null,
+          metodo_pago: body.metodo_pago ?? null,
+          observaciones: body.observaciones ?? null,
+        },
+      })
 
-  if (entregaError || !entregaCreada) {
+      // Actualizar el estado del pedido a 'entregado'
+      await tx.pedido.update({
+        where: { id: body.pedido_id! },
+        data: { estado: 'entregado' },
+      })
+
+      // Obtener los items del pedido para actualizar el stock
+      const pedidoItems = await tx.pedidoItem.findMany({
+        where: { pedido_id: body.pedido_id! },
+        select: { producto_id: true, cantidad: true },
+      })
+
+      // Decrementar el stock de bodega para cada producto (sin llegar a negativo)
+      for (const item of pedidoItems) {
+        const inv = await tx.inventario.findUnique({
+          where: { producto_id: item.producto_id },
+          select: { id: true, stock_bodega: true },
+        })
+        if (inv) {
+          await tx.inventario.update({
+            where: { id: inv.id },
+            data: { stock_bodega: Math.max(0, inv.stock_bodega - item.cantidad) },
+          })
+        }
+      }
+
+      return entrega
+    })
+
+    return NextResponse.json(
+      { data: entregaCreada as unknown as Entrega, error: null } as ApiResponse<Entrega>,
+      { status: 201 }
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al registrar la entrega' } as ApiResponse<Entrega>,
       { status: 500 }
     )
   }
-
-  // Obtener los items del pedido para actualizar inventario
-  const { data: pedidoItems, error: itemsError } = await supabase
-    .from('pedido_items')
-    .select('producto_id, cantidad')
-    .eq('pedido_id', body.pedido_id)
-
-  if (!itemsError && pedidoItems && pedidoItems.length > 0) {
-    // Decrementar stock atómicamente para cada item
-    for (const item of pedidoItems) {
-      const { error: decrementoError } = await supabase.rpc('decrementar_stock_producto', {
-        p_producto_id: item.producto_id,
-        p_cantidad: item.cantidad,
-      })
-
-      if (decrementoError) {
-        console.error(`Error al decrementar stock para producto ${item.producto_id}:`, decrementoError.message)
-        // No fallar la entrega por error de stock — registrar para seguimiento
-      }
-    }
-  }
-
-  return NextResponse.json(
-    { data: entregaCreada as Entrega, error: null } as ApiResponse<Entrega>,
-    { status: 201 }
-  )
 }

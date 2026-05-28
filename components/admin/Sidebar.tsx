@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePathname } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 
 type NavItem = {
   href: string
@@ -73,12 +73,9 @@ type SidebarProps = {
 
 export function Sidebar({ userEmail }: SidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
 
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/login' })
   }
 
   return (

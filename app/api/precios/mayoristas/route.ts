@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getToken } from 'next-auth/jwt'
+import { db } from '@/lib/db'
 import type { ApiResponse, ApiListResponse, PrecioMayorista } from '@/lib/types'
 
 /**
  * GET /api/precios/mayoristas?empresa_id=uuid
  * Listar precios mayoristas de una empresa.
- * Accesible para admin (y mayoristas con su propia empresa).
+ * Accesible solo para admin.
  */
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -30,32 +27,31 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const empresaId = searchParams.get('empresa_id')
 
-  let query = supabase
-    .from('precios_mayorista')
-    .select('*', { count: 'exact' })
-    .order('vigente_desde', { ascending: false })
+  try {
+    const where = empresaId ? { empresa_id: empresaId } : {}
 
-  if (empresaId) {
-    query = query.eq('empresa_id', empresaId)
-  }
+    const [precios, total] = await Promise.all([
+      db.precioMayorista.findMany({
+        where,
+        orderBy: { vigente_desde: 'desc' },
+      }),
+      db.precioMayorista.count({ where }),
+    ])
 
-  const { data, error, count } = await query
-
-  if (error) {
+    return NextResponse.json(
+      { data: precios as unknown as PrecioMayorista[], total, error: null } as ApiListResponse<PrecioMayorista>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, total: 0, error: 'Error al obtener precios mayoristas' } as ApiListResponse<PrecioMayorista>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as PrecioMayorista[], total: count ?? 0, error: null } as ApiListResponse<PrecioMayorista>
-  )
 }
 
 /**
  * POST /api/precios/mayoristas
- * Crear o actualizar un tramo de precio mayorista (solo admin).
+ * Crear un tramo de precio mayorista (solo admin).
  *
  * Body:
  * {
@@ -70,19 +66,15 @@ export async function GET(request: NextRequest) {
  * }
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -124,35 +116,31 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const hoy = new Date().toISOString().split('T')[0]
-
-  const { data, error } = await supabase
-    .from('precios_mayorista')
-    .insert({
-      empresa_id: body.empresa_id,
-      producto_id: body.producto_id,
-      volumen_minimo: body.volumen_minimo,
-      volumen_maximo: body.volumen_maximo ?? null,
-      precio: body.precio,
-      notas: body.notas ?? null,
-      vigente_desde: body.vigente_desde ?? hoy,
-      vigente_hasta: body.vigente_hasta ?? null,
-      creado_por: user.id,
+  try {
+    const precio = await db.precioMayorista.create({
+      data: {
+        empresa_id: body.empresa_id,
+        producto_id: body.producto_id,
+        volumen_minimo: body.volumen_minimo,
+        volumen_maximo: body.volumen_maximo ?? null,
+        precio: body.precio,
+        notas: body.notas ?? null,
+        vigente_desde: body.vigente_desde ? new Date(body.vigente_desde) : new Date(),
+        vigente_hasta: body.vigente_hasta ? new Date(body.vigente_hasta) : null,
+        creado_por: token.id as string,
+      },
     })
-    .select()
-    .single()
 
-  if (error) {
+    return NextResponse.json(
+      { data: precio as unknown as PrecioMayorista, error: null } as ApiResponse<PrecioMayorista>,
+      { status: 201 }
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al crear el precio mayorista' } as ApiResponse<PrecioMayorista>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as PrecioMayorista, error: null } as ApiResponse<PrecioMayorista>,
-    { status: 201 }
-  )
 }
 
 /**
@@ -160,19 +148,15 @@ export async function POST(request: NextRequest) {
  * Eliminar un tramo de precio mayorista (solo admin).
  */
 export async function DELETE(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -190,11 +174,10 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Verificar que existe
-  const { data: existente } = await supabase
-    .from('precios_mayorista')
-    .select('id')
-    .eq('id', id)
-    .single()
+  const existente = await db.precioMayorista.findUnique({
+    where: { id },
+    select: { id: true },
+  })
 
   if (!existente) {
     return NextResponse.json(
@@ -203,19 +186,16 @@ export async function DELETE(request: NextRequest) {
     )
   }
 
-  const { error } = await supabase
-    .from('precios_mayorista')
-    .delete()
-    .eq('id', id)
+  try {
+    await db.precioMayorista.delete({ where: { id } })
 
-  if (error) {
+    return NextResponse.json(
+      { data: null, error: null } as ApiResponse<null>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al eliminar el precio mayorista' } as ApiResponse<null>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: null, error: null } as ApiResponse<null>
-  )
 }

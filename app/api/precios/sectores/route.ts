@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getToken } from 'next-auth/jwt'
+import { db } from '@/lib/db'
 import type { ApiResponse, ApiListResponse, PrecioDetalle } from '@/lib/types'
 
 /**
  * GET /api/precios/sectores?producto_id=uuid
  * Listar precios detalle por sector y producto.
- * Accesible para admin.
+ * Accesible solo para admin.
  */
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -30,27 +27,26 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const productoId = searchParams.get('producto_id')
 
-  let query = supabase
-    .from('precios_detalle')
-    .select('*', { count: 'exact' })
-    .order('vigente_desde', { ascending: false })
+  try {
+    const where = productoId ? { producto_id: productoId } : {}
 
-  if (productoId) {
-    query = query.eq('producto_id', productoId)
-  }
+    const [precios, total] = await Promise.all([
+      db.precioDetalle.findMany({
+        where,
+        orderBy: { vigente_desde: 'desc' },
+      }),
+      db.precioDetalle.count({ where }),
+    ])
 
-  const { data, error, count } = await query
-
-  if (error) {
+    return NextResponse.json(
+      { data: precios as unknown as PrecioDetalle[], total, error: null } as ApiListResponse<PrecioDetalle>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, total: 0, error: 'Error al obtener precios detalle' } as ApiListResponse<PrecioDetalle>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as PrecioDetalle[], total: count ?? 0, error: null } as ApiListResponse<PrecioDetalle>
-  )
 }
 
 /**
@@ -70,19 +66,15 @@ export async function GET(request: NextRequest) {
  * }
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -124,34 +116,30 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const hoy = new Date().toISOString().split('T')[0]
-
-  const { data, error } = await supabase
-    .from('precios_detalle')
-    .insert({
-      producto_id: body.producto_id,
-      sector: body.sector ?? null,
-      cantidad_minima: body.cantidad_minima,
-      cantidad_maxima: body.cantidad_maxima ?? null,
-      precio: body.precio,
-      notas: body.notas ?? null,
-      vigente_desde: body.vigente_desde ?? hoy,
-      vigente_hasta: body.vigente_hasta ?? null,
+  try {
+    const precio = await db.precioDetalle.create({
+      data: {
+        producto_id: body.producto_id,
+        sector: body.sector ?? null,
+        cantidad_minima: body.cantidad_minima,
+        cantidad_maxima: body.cantidad_maxima ?? null,
+        precio: body.precio,
+        notas: body.notas ?? null,
+        vigente_desde: body.vigente_desde ? new Date(body.vigente_desde) : new Date(),
+        vigente_hasta: body.vigente_hasta ? new Date(body.vigente_hasta) : null,
+      },
     })
-    .select()
-    .single()
 
-  if (error) {
+    return NextResponse.json(
+      { data: precio as unknown as PrecioDetalle, error: null } as ApiResponse<PrecioDetalle>,
+      { status: 201 }
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al crear el precio detalle' } as ApiResponse<PrecioDetalle>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as PrecioDetalle, error: null } as ApiResponse<PrecioDetalle>,
-    { status: 201 }
-  )
 }
 
 /**
@@ -159,19 +147,15 @@ export async function POST(request: NextRequest) {
  * Eliminar un tramo de precio detalle (solo admin).
  */
 export async function DELETE(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -189,11 +173,10 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Verificar que existe
-  const { data: existente } = await supabase
-    .from('precios_detalle')
-    .select('id')
-    .eq('id', id)
-    .single()
+  const existente = await db.precioDetalle.findUnique({
+    where: { id },
+    select: { id: true },
+  })
 
   if (!existente) {
     return NextResponse.json(
@@ -202,19 +185,16 @@ export async function DELETE(request: NextRequest) {
     )
   }
 
-  const { error } = await supabase
-    .from('precios_detalle')
-    .delete()
-    .eq('id', id)
+  try {
+    await db.precioDetalle.delete({ where: { id } })
 
-  if (error) {
+    return NextResponse.json(
+      { data: null, error: null } as ApiResponse<null>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al eliminar el precio detalle' } as ApiResponse<null>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: null, error: null } as ApiResponse<null>
-  )
 }

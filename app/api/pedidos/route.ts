@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getToken } from 'next-auth/jwt'
+import { db } from '@/lib/db'
 import { calcularPrecioItem } from '@/lib/precios/calcular'
 import type {
   ApiResponse,
   ApiListResponse,
   Pedido,
-  PedidoConDetalle,
   CrearPedidoInput,
-  Cliente,
 } from '@/lib/types'
 
 /**
@@ -18,66 +17,73 @@ import type {
  * Filtros opcionales: ?estado=nuevo&fecha=2024-01-01
  */
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin' && rol !== 'chofer') {
+  const role = token.role as string
+  if (role !== 'admin' && role !== 'chofer') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
     )
   }
 
-  const { searchParams } = new URL(request.url)
-  const estado = searchParams.get('estado')
-  const fecha = searchParams.get('fecha')
-
-  let query = supabase
-    .from('pedidos')
-    .select('*', { count: 'exact' })
-    .order('fecha_pedido', { ascending: false })
-
   // Chofer solo ve sus propios pedidos
-  if (rol === 'chofer') {
-    const choferIdMeta = user.app_metadata?.chofer_id as string | undefined
-    if (!choferIdMeta) {
+  let choferIdFilter: string | undefined
+  if (role === 'chofer') {
+    const chofer = await db.chofer.findUnique({
+      where: { user_id: token.id as string },
+      select: { id: true },
+    })
+    if (!chofer) {
       return NextResponse.json(
         { data: null, total: 0, error: 'Chofer no configurado' } as ApiListResponse<Pedido>,
         { status: 403 }
       )
     }
-    query = query.eq('chofer_id', choferIdMeta)
+    choferIdFilter = chofer.id
   }
 
-  // Filtros opcionales
-  if (estado) {
-    query = query.eq('estado', estado)
-  }
+  const { searchParams } = new URL(request.url)
+  const estado = searchParams.get('estado')
+  const fecha = searchParams.get('fecha')
+
+  // Construir filtro dinámicamente
+  const where: {
+    chofer_id?: string
+    estado?: string
+    fecha_pedido?: { gte: Date; lte: Date }
+  } = {}
+
+  if (choferIdFilter) where.chofer_id = choferIdFilter
+  if (estado) where.estado = estado
   if (fecha) {
-    query = query.gte('fecha_pedido', fecha).lt('fecha_pedido', `${fecha}T23:59:59`)
+    where.fecha_pedido = {
+      gte: new Date(fecha),
+      lte: new Date(`${fecha}T23:59:59`),
+    }
   }
 
-  const { data, error, count } = await query
+  try {
+    const [pedidos, total] = await Promise.all([
+      db.pedido.findMany({ where, orderBy: { fecha_pedido: 'desc' } }),
+      db.pedido.count({ where }),
+    ])
 
-  if (error) {
+    return NextResponse.json(
+      { data: pedidos as unknown as Pedido[], total, error: null } as ApiListResponse<Pedido>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, total: 0, error: 'Error al obtener pedidos' } as ApiListResponse<Pedido>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as Pedido[], total: count ?? 0, error: null } as ApiListResponse<Pedido>
-  )
 }
 
 /**
@@ -88,25 +94,24 @@ export async function GET(request: NextRequest) {
  * {
  *   cliente_id?: uuid,
  *   empresa_id?: uuid,
+ *   chofer_id?: uuid,
+ *   fecha_entrega_programada?: string (ISO date),
  *   origen: 'web' | 'whatsapp' | 'telefono' | 'manual',
- *   items: [{ producto_id: uuid, cantidad: number }],
+ *   items: [{ producto_id: uuid, cantidad: number, precio_unitario?: number }],
  *   notas?: string
  * }
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin' && rol !== 'chofer') {
+  const role = token.role as string
+  if (role !== 'admin' && role !== 'chofer') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -134,25 +139,22 @@ export async function POST(request: NextRequest) {
   // Determinar tipo de cliente para el cálculo de precios
   let clienteTipo: 'mayorista' | 'detalle' = 'detalle'
   let sector: string | undefined
-  let clienteData: Pick<Cliente, 'tipo_cliente' | 'sector' | 'empresa_id'> | null = null
+  let empresaIdResuelto: string | undefined
 
   if (body.cliente_id) {
-    const { data: cliente } = await supabase
-      .from('clientes')
-      .select('tipo_cliente, sector, empresa_id')
-      .eq('id', body.cliente_id)
-      .single<Pick<Cliente, 'tipo_cliente' | 'sector' | 'empresa_id'>>()
-
+    const cliente = await db.cliente.findUnique({
+      where: { id: body.cliente_id },
+      select: { tipo_cliente: true, sector: true, empresa_id: true },
+    })
     if (cliente) {
-      clienteData = cliente
-      if (cliente.tipo_cliente === 'mayorista') {
-        clienteTipo = 'mayorista'
-      }
+      if (cliente.tipo_cliente === 'mayorista') clienteTipo = 'mayorista'
       sector = cliente.sector ?? undefined
+      empresaIdResuelto = cliente.empresa_id ?? undefined
     }
   } else if (body.empresa_id) {
     // Pedido directo de empresa mayorista
     clienteTipo = 'mayorista'
+    empresaIdResuelto = body.empresa_id
   }
 
   // Calcular precio para cada item
@@ -183,13 +185,11 @@ export async function POST(request: NextRequest) {
       productoId: item.producto_id,
       cantidad: item.cantidad,
       clienteTipo,
-      empresaId: body.empresa_id ?? clienteData?.empresa_id ?? undefined,
-      sector: clienteData?.sector ?? sector,
+      empresaId: body.empresa_id ?? empresaIdResuelto,
+      sector,
     })
 
-    if (resultado.origen === 'sin_precio') {
-      tieneSinPrecio = true
-    }
+    if (resultado.origen === 'sin_precio') tieneSinPrecio = true
 
     itemsConPrecio.push({
       producto_id: item.producto_id,
@@ -203,53 +203,56 @@ export async function POST(request: NextRequest) {
   // Calcular monto total
   const montoTotal = itemsConPrecio.reduce((sum, item) => sum + item.subtotal, 0)
 
-  // Preparar notas con indicador si hay items sin precio
+  // Añadir nota si hay items sin precio
   let notasFinales = body.notas ?? null
   if (tieneSinPrecio) {
     const notaEspecial = 'ATENCIÓN: Uno o más items no tienen precio asignado.'
     notasFinales = notasFinales ? `${notasFinales}\n${notaEspecial}` : notaEspecial
   }
 
-  const pedidoData = {
-    cliente_id: body.cliente_id ?? null,
-    empresa_id: body.empresa_id ?? null,
-    chofer_id: body.chofer_id ?? null,
-    fecha_entrega_programada: body.fecha_entrega_programada ?? null,
-    estado: 'nuevo',
-    origen: body.origen,
-    monto_total: montoTotal,
-    notas: notasFinales,
-  }
+  // Crear pedido con items en una transacción atómica
+  try {
+    const pedido = await db.$transaction(async (tx) => {
+      // Generar número de pedido (PED-YYYY-NNNN)
+      const año = new Date().getFullYear()
+      const count = await tx.pedido.count()
+      const numeroPedido = `PED-${año}-${String(count + 1).padStart(4, '0')}`
 
-  const itemsData = itemsConPrecio.map((item) => ({
-    producto_id: item.producto_id,
-    cantidad: item.cantidad,
-    precio_unitario: item.precio_unitario,
-    precio_origen: item.precio_origen,
-  }))
+      return tx.pedido.create({
+        data: {
+          numero_pedido: numeroPedido,
+          cliente_id: body.cliente_id ?? null,
+          empresa_id: body.empresa_id ?? null,
+          chofer_id: body.chofer_id ?? null,
+          fecha_entrega_programada: body.fecha_entrega_programada
+            ? new Date(body.fecha_entrega_programada)
+            : null,
+          estado: 'nuevo',
+          origen: body.origen,
+          monto_total: montoTotal,
+          notas: notasFinales,
+          items: {
+            create: itemsConPrecio.map((item) => ({
+              producto_id: item.producto_id,
+              cantidad: item.cantidad,
+              precio_unitario: item.precio_unitario,
+              precio_origen: item.precio_origen,
+              subtotal: item.subtotal,
+            })),
+          },
+        },
+        include: { items: true },
+      })
+    })
 
-  const { data: rpcResult, error: rpcError } = await supabase.rpc('crear_pedido_con_items', {
-    p_pedido: pedidoData,
-    p_items: itemsData,
-  })
-
-  if (rpcError || !rpcResult) {
+    return NextResponse.json(
+      { data: pedido as unknown as Pedido, error: null } as ApiResponse<Pedido>,
+      { status: 201 }
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al crear el pedido' } as ApiResponse<never>,
       { status: 500 }
     )
   }
-
-  // Retornar el pedido creado con sus items
-  const pedidoId = (rpcResult as { id: string }).id
-  const { data: pedidoCreado } = await supabase
-    .from('pedidos')
-    .select('*, pedido_items(*)')
-    .eq('id', pedidoId)
-    .single()
-
-  return NextResponse.json(
-    { data: pedidoCreado, error: null } as ApiResponse<typeof pedidoCreado>,
-    { status: 201 }
-  )
 }

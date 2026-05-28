@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getToken } from 'next-auth/jwt'
+import { db } from '@/lib/db'
 import type { ApiResponse, ApiListResponse, Inventario } from '@/lib/types'
 
 /**
@@ -7,41 +8,36 @@ import type { ApiResponse, ApiListResponse, Inventario } from '@/lib/types'
  * Obtener el stock actual de todos los productos.
  * Accesible para admin y chofer.
  */
-export async function GET(_request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+export async function GET(request: NextRequest) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
     )
   }
 
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin' && rol !== 'chofer') {
+  if (token.role !== 'admin' && token.role !== 'chofer') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
     )
   }
 
-  const { data, error, count } = await supabase
-    .from('inventario')
-    .select('*', { count: 'exact' })
-    .order('updated_at', { ascending: false })
+  try {
+    const inventario = await db.inventario.findMany({
+      orderBy: { updated_at: 'desc' },
+    })
 
-  if (error) {
+    return NextResponse.json(
+      { data: inventario as unknown as Inventario[], total: inventario.length, error: null } as ApiListResponse<Inventario>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, total: 0, error: 'Error al obtener inventario' } as ApiListResponse<Inventario>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as Inventario[], total: count ?? 0, error: null } as ApiListResponse<Inventario>
-  )
 }
 
 /**
@@ -56,11 +52,8 @@ export async function GET(_request: NextRequest) {
  * }
  */
 export async function PATCH(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }
@@ -68,8 +61,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Solo admin puede ajustar el stock
-  const rol = user.app_metadata?.role as string | undefined
-  if (rol !== 'admin') {
+  if (token.role !== 'admin') {
     return NextResponse.json(
       { data: null, error: 'Sin permisos' } as ApiResponse<never>,
       { status: 403 }
@@ -106,13 +98,12 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Verificar que el producto tiene registro de inventario
-  const { data: inventarioExistente, error: buscarError } = await supabase
-    .from('inventario')
-    .select('id')
-    .eq('producto_id', body.producto_id)
-    .single()
+  const inventarioExistente = await db.inventario.findUnique({
+    where: { producto_id: body.producto_id },
+    select: { id: true },
+  })
 
-  if (buscarError || !inventarioExistente) {
+  if (!inventarioExistente) {
     return NextResponse.json(
       { data: null, error: 'No se encontró inventario para este producto' } as ApiResponse<Inventario>,
       { status: 404 }
@@ -120,29 +111,23 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Construir objeto de actualización solo con los campos proporcionados
-  const actualizacion: Partial<{ stock_bodega: number; stock_vacios_bodega: number }> = {}
-  if (body.stock_bodega !== undefined) {
-    actualizacion.stock_bodega = body.stock_bodega
-  }
-  if (body.stock_vacios_bodega !== undefined) {
-    actualizacion.stock_vacios_bodega = body.stock_vacios_bodega
-  }
+  const actualizacion: { stock_bodega?: number; stock_vacios_bodega?: number } = {}
+  if (body.stock_bodega !== undefined) actualizacion.stock_bodega = body.stock_bodega
+  if (body.stock_vacios_bodega !== undefined) actualizacion.stock_vacios_bodega = body.stock_vacios_bodega
 
-  const { data, error } = await supabase
-    .from('inventario')
-    .update(actualizacion)
-    .eq('producto_id', body.producto_id)
-    .select()
-    .single()
+  try {
+    const updated = await db.inventario.update({
+      where: { producto_id: body.producto_id },
+      data: actualizacion,
+    })
 
-  if (error) {
+    return NextResponse.json(
+      { data: updated as unknown as Inventario, error: null } as ApiResponse<Inventario>
+    )
+  } catch {
     return NextResponse.json(
       { data: null, error: 'Error al actualizar el inventario' } as ApiResponse<Inventario>,
       { status: 500 }
     )
   }
-
-  return NextResponse.json(
-    { data: data as Inventario, error: null } as ApiResponse<Inventario>
-  )
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getToken } from 'next-auth/jwt'
 import { calcularPrecioItem } from '@/lib/precios/calcular'
 import type { ApiResponse, ResultadoPrecio, InputCalculoPrecio } from '@/lib/types'
 
@@ -17,11 +17,8 @@ import type { ApiResponse, ResultadoPrecio, InputCalculoPrecio } from '@/lib/typ
  * }
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verificar autenticación
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const token = await getToken({ req: request })
+  if (!token) {
     return NextResponse.json(
       { data: null, error: 'No autenticado' } as ApiResponse<never>,
       { status: 401 }

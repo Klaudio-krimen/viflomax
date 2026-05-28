@@ -18,7 +18,7 @@ export async function DELETE(
   try {
     await db.$transaction(async (tx) => {
       // Eliminar items primero (FK)
-      await tx.itemPedido.deleteMany({ where: { pedido_id: params.id } })
+      await tx.pedidoItem.deleteMany({ where: { pedido_id: params.id } })
       // Eliminar entregas si existen
       await tx.entrega.deleteMany({ where: { pedido_id: params.id } })
       // Eliminar pedido

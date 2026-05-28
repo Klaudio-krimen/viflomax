@@ -2,7 +2,7 @@
 
 import { EliminarButton } from '@/components/ui/EliminarButton'
 
-export function EliminarPedidoButton({ id, numero }: { id: string; numero: number | null }) {
+export function EliminarPedidoButton({ id, numero }: { id: string; numero: string | number | null }) {
   return (
     <EliminarButton
       url={`/api/pedidos/${id}`}

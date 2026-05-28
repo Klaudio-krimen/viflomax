@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { ClienteConEmpresa } from '@/lib/types'
 import { Prisma } from '@prisma/client'
+import { ClientesTable } from './ClientesTable'
 
 export const dynamic = 'force-dynamic'
 
@@ -106,60 +106,7 @@ export default async function ClientesPage({
             {q ? `No se encontraron clientes para "${q}".` : 'No hay clientes registrados.'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm font-outfit">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Nombre
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Teléfono
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Tipo
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Sector
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Empresa
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {clientesList.map((cliente) => {
-                  const tipoBadge = TIPO_BADGE[cliente.tipo_cliente] ?? TIPO_BADGE.nuevo
-                  return (
-                    <tr key={cliente.id} className="hover:bg-blue-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">{cliente.nombre}</td>
-                      <td className="px-4 py-3 text-gray-500">{cliente.telefono ?? '—'}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant={tipoBadge.variant} size="sm">
-                          {tipoBadge.label}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">{cliente.sector ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {cliente.empresa?.razon_social ?? '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/clientes/${cliente.id}`}
-                          className="px-2.5 py-1 text-xs bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-                        >
-                          Ver ficha
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ClientesTable clientes={clientesList} />
         )}
       </div>
     </div>

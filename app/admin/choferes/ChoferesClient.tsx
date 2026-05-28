@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import type { Chofer } from '@/lib/types'
-import { crearChofer, editarChofer, toggleActivoChofer } from './actions'
+import { crearChofer, editarChofer, toggleActivoChofer, eliminarChofer } from './actions'
 
 // ─── Generador de contraseña temporal ────────────────────────────────────────
 function generatePassword(): string {
@@ -300,6 +300,41 @@ function EditarChoferModal({
   )
 }
 
+// ─── Botón: Eliminar chofer ───────────────────────────────────────────────────
+function EliminarChoferButton({
+  chofer,
+  onSuccess,
+}: {
+  chofer: Chofer
+  onSuccess: () => void
+}) {
+  const [pending, startTransition] = useTransition()
+
+  function handleClick() {
+    if (
+      !window.confirm(
+        `¿Eliminar a ${chofer.nombre}? Se eliminará también su cuenta de acceso. Esta acción no se puede deshacer.`
+      )
+    )
+      return
+    startTransition(async () => {
+      await eliminarChofer(chofer.id)
+      onSuccess()
+    })
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={pending}
+      className="px-2.5 py-1 text-xs bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium font-outfit border border-red-200 disabled:opacity-50"
+    >
+      {pending ? '…' : 'Eliminar'}
+    </button>
+  )
+}
+
 // ─── Botón: Activar / Desactivar ──────────────────────────────────────────────
 function ToggleActivoButton({
   chofer,
@@ -468,6 +503,7 @@ export function ChoferesClient({ choferes }: { choferes: Chofer[] }) {
                         >
                           Ver entregas
                         </Link>
+                        <EliminarChoferButton chofer={chofer} onSuccess={onSuccess} />
                       </div>
                     </td>
                   </tr>

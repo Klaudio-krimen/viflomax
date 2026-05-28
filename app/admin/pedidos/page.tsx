@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { Badge, estadoPedidoBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { PedidoConDetalle } from '@/lib/types'
+import { EliminarPedidoButton } from './EliminarPedidoButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -230,6 +231,7 @@ export default async function PedidosPage({
                           >
                             Ver
                           </Link>
+                          <EliminarPedidoButton id={pedido.id} numero={pedido.numero_pedido} />
                         </div>
                       </td>
                     </tr>

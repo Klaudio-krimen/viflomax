@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import type { PrecioDetalle } from '@/lib/types'
 import { NuevoPrecioButton } from './NuevoPrecioButton'
+import { EliminarButton } from '@/components/ui/EliminarButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,6 +95,7 @@ export default async function PreciosSectoresPage() {
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Vigencia
                         </th>
+                        <th className="px-4 py-2"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -116,6 +118,13 @@ export default async function PreciosSectoresPage() {
                             {precio.vigente_hasta
                               ? ` → ${formatDate(new Date(precio.vigente_hasta))}`
                               : ' (sin vencimiento)'}
+                          </td>
+                          <td className="px-4 py-2">
+                            <EliminarButton
+                              url={`/api/precios/sectores/${precio.id}`}
+                              confirmar="¿Eliminar este precio de sector?"
+                              label="Eliminar"
+                            />
                           </td>
                         </tr>
                       ))}

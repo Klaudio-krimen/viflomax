@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
+import { EliminarButton } from '@/components/ui/EliminarButton'
 import type { InventarioConProducto } from './page'
 
 type AjusteForm = {
@@ -43,6 +44,13 @@ export function InventarioTable({ inventario }: InventarioTableProps) {
   const [savingAjuste, setSavingAjuste] = useState(false)
   const [ajusteError, setAjusteError] = useState<string | null>(null)
 
+  // --- Editar producto ---
+  const [editOpen, setEditOpen] = useState(false)
+  const [editRow, setEditRow] = useState<InventarioConProducto | null>(null)
+  const [editForm, setEditForm] = useState({ nombre: '', categoria: 'envase', precio_base: '' })
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
   // --- Nuevo producto ---
   const [nuevoOpen, setNuevoOpen] = useState(false)
   const [nuevoForm, setNuevoForm] = useState<NuevoProductoForm>({
@@ -55,6 +63,45 @@ export function InventarioTable({ inventario }: InventarioTableProps) {
   })
   const [savingNuevo, setSavingNuevo] = useState(false)
   const [nuevoError, setNuevoError] = useState<string | null>(null)
+
+  const openEdit = (row: InventarioConProducto) => {
+    setEditRow(row)
+    setEditForm({
+      nombre: row.producto?.nombre ?? '',
+      categoria: row.producto?.categoria ?? 'envase',
+      precio_base: row.producto?.precio_base != null ? String(row.producto.precio_base) : '',
+    })
+    setEditError(null)
+    setEditOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editRow || !editForm.nombre.trim()) {
+      setEditError('El nombre es obligatorio')
+      return
+    }
+    setSavingEdit(true)
+    setEditError(null)
+    try {
+      const res = await fetch(`/api/productos/${editRow.producto_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: editForm.nombre.trim(),
+          categoria: editForm.categoria,
+          precio_base: editForm.precio_base ? Number(editForm.precio_base) : null,
+        }),
+      })
+      const json = await res.json() as { error?: string }
+      if (!res.ok) throw new Error(json.error ?? 'Error al guardar')
+      setEditOpen(false)
+      router.refresh()
+    } catch (err: unknown) {
+      setEditError(err instanceof Error ? err.message : 'Error inesperado')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
 
   const openAjuste = (row: InventarioConProducto) => {
     setSelectedRow(row)
@@ -193,9 +240,22 @@ export function InventarioTable({ inventario }: InventarioTableProps) {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <Button variant="ghost" size="sm" onClick={() => openAjuste(row)}>
-                          Ajustar Stock
-                        </Button>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button variant="ghost" size="sm" onClick={() => openAjuste(row)}>
+                            Ajustar Stock
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => openEdit(row)}
+                            className="px-2.5 py-1 text-xs bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium font-outfit border border-gray-200"
+                          >
+                            Editar
+                          </button>
+                          <EliminarButton
+                            url={`/api/productos/${row.producto_id}`}
+                            confirmar={`¿Eliminar "${row.producto?.nombre}"? Se eliminará también su inventario y precios asociados.`}
+                          />
+                        </div>
                       </td>
                     </tr>
                   )
@@ -205,6 +265,63 @@ export function InventarioTable({ inventario }: InventarioTableProps) {
           </div>
         </div>
       )}
+
+      {/* Modal editar producto */}
+      <Modal
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
+        title={`Editar — ${editRow?.producto?.nombre ?? ''}`}
+        size="md"
+      >
+        <div className="space-y-4">
+          {editError && (
+            <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-3 py-2 text-sm font-outfit">
+              {editError}
+            </div>
+          )}
+          <Input
+            label="Nombre *"
+            value={editForm.nombre}
+            onChange={(e) => setEditForm((p) => ({ ...p, nombre: e.target.value }))}
+            required
+          />
+          <div className="flex flex-col gap-1.5">
+            <label className="font-medium text-sm text-gray-700 font-outfit">Categoría</label>
+            <div className="grid grid-cols-2 gap-2">
+              {CATEGORIAS.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setEditForm((p) => ({ ...p, categoria: cat.value }))}
+                  className={`py-2 px-3 rounded-lg border text-sm font-outfit font-medium transition-colors ${
+                    editForm.categoria === cat.value
+                      ? 'bg-viflomax-azul text-white border-viflomax-azul'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Input
+            label="Precio base (CLP)"
+            type="number"
+            min="0"
+            value={editForm.precio_base}
+            onChange={(e) => setEditForm((p) => ({ ...p, precio_base: e.target.value }))}
+            placeholder="0"
+          />
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)} disabled={savingEdit}>
+              Cancelar
+            </Button>
+            <Button variant="primary" size="sm" loading={savingEdit} onClick={handleSaveEdit}>
+              Guardar Cambios
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal ajuste de stock */}
       <Modal

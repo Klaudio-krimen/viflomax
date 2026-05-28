@@ -91,6 +91,31 @@ export async function editarChofer(
   return { error: null }
 }
 
+// ─── Eliminar chofer ─────────────────────────────────────────────────────────
+export async function eliminarChofer(id: string): Promise<ActionResult> {
+  if (!(await verificarAdmin())) return { error: 'No autorizado' }
+
+  try {
+    const chofer = await db.chofer.findUnique({
+      where: { id },
+      select: { user_id: true },
+    })
+    if (!chofer) return { error: 'Chofer no encontrado' }
+
+    await db.$transaction(async (tx) => {
+      await tx.chofer.delete({ where: { id } })
+      if (chofer.user_id) {
+        await tx.user.delete({ where: { id: chofer.user_id } })
+      }
+    })
+  } catch {
+    return { error: 'Error eliminando el chofer' }
+  }
+
+  revalidatePath('/admin/choferes')
+  return { error: null }
+}
+
 // ─── Activar / Desactivar chofer ─────────────────────────────────────────────
 export async function toggleActivoChofer(
   id: string,

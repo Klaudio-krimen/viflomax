@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import type { PrecioMayorista } from '@/lib/types'
 import { AgregarTramoButton } from './AgregarTramoButton'
 import { NuevaEmpresaButton } from './NuevaEmpresaButton'
+import { EliminarButton } from '@/components/ui/EliminarButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -78,14 +79,21 @@ export default async function PreciosMayoristasPage() {
                 key={empresa.id}
                 className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
               >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
                   <h3 className="font-nunito font-semibold text-gray-900">
                     {empresa.razon_social}
                   </h3>
-                  <AgregarTramoButton
-                    empresaId={empresa.id}
-                    empresaNombre={empresa.razon_social}
-                  />
+                  <div className="flex items-center gap-2">
+                    <AgregarTramoButton
+                      empresaId={empresa.id}
+                      empresaNombre={empresa.razon_social}
+                    />
+                    <EliminarButton
+                      url={`/api/empresas/${empresa.id}`}
+                      confirmar={`¿Eliminar la empresa "${empresa.razon_social}"? Se eliminarán todos sus tramos de precio.`}
+                      label="Eliminar empresa"
+                    />
+                  </div>
                 </div>
                 {tramosEmpresa.length === 0 ? (
                   <div className="px-6 py-6 text-sm font-outfit text-gray-400">
@@ -111,6 +119,7 @@ export default async function PreciosMayoristasPage() {
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                             Vigencia
                           </th>
+                          <th className="px-4 py-2"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -133,6 +142,13 @@ export default async function PreciosMayoristasPage() {
                               {tramo.vigente_hasta
                                 ? ` → ${formatDate(new Date(tramo.vigente_hasta))}`
                                 : ' (sin vencimiento)'}
+                            </td>
+                            <td className="px-4 py-2">
+                              <EliminarButton
+                                url={`/api/precios/mayoristas/${tramo.id}`}
+                                confirmar="¿Eliminar este tramo de precio?"
+                                label="Eliminar"
+                              />
                             </td>
                           </tr>
                         ))}

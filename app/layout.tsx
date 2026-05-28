@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   title: 'Agua Viflomax — Agua Purificada a Domicilio en Maipú',
   description:
     'Distribución de agua purificada a domicilio en Maipú. Envases 20L, 10L, recargas y dispensadores. Pedidos rápidos vía web o WhatsApp.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Viflomax',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

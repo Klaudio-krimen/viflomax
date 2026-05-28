@@ -5,7 +5,7 @@ export const contentType = 'image/png'
 export const runtime = 'edge'
 
 export default async function Icon() {
-  const logoUrl = `${process.env.NEXTAUTH_URL ?? 'https://viflomax.vercel.app'}/logo.png`
+  const logoUrl = `${process.env.NEXTAUTH_URL ?? 'https://viflomax.vercel.app'}/logo.jpeg`
 
   return new ImageResponse(
     <div

@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server'
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
-  const logoUrl = new URL('/logo.png', request.url).toString()
+  const logoUrl = new URL('/logo.jpeg', request.url).toString()
 
   return new ImageResponse(
     <div

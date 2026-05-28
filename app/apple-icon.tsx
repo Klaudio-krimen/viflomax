@@ -6,7 +6,7 @@ export const runtime = 'edge'
 
 export default async function AppleIcon() {
   // logo.png debe estar en /public/logo.png
-  const logoUrl = `${process.env.NEXTAUTH_URL ?? 'https://viflomax.vercel.app'}/logo.png`
+  const logoUrl = `${process.env.NEXTAUTH_URL ?? 'https://viflomax.vercel.app'}/logo.jpeg`
 
   return new ImageResponse(
     <div

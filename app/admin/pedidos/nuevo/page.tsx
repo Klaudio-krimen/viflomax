@@ -1,12 +1,21 @@
 'use client'
 
-import React, { useState, FormEvent } from 'react'
+import React, { useState, useEffect, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
+type Opcion = { id: string; nombre: string }
+type ProductoOpcion = { id: string; nombre: string; categoria: string; precio_base: number | null }
+
 export default function NuevoPedidoPage() {
   const router = useRouter()
+
+  const [clientes, setClientes] = useState<Opcion[]>([])
+  const [choferes, setChoferes] = useState<Opcion[]>([])
+  const [productos, setProductos] = useState<ProductoOpcion[]>([])
+  const [loadingData, setLoadingData] = useState(true)
 
   const [clienteId, setClienteId] = useState('')
   const [choferId, setChoferId] = useState('')
@@ -15,15 +24,31 @@ export default function NuevoPedidoPage() {
   const [items, setItems] = useState([{ productoId: '', cantidad: 1, precioCalculado: null as number | null }])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [calculando, setCalculando] = useState(false)
 
-  const addItem = () => {
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/clientes').then((r) => r.json()),
+      fetch('/api/choferes').then((r) => r.json()),
+      fetch('/api/productos').then((r) => r.json()),
+    ])
+      .then(([cJson, chJson, pJson]) => {
+        setClientes(
+          (cJson.data ?? []).map((c: { id: string; nombre: string }) => ({ id: c.id, nombre: c.nombre }))
+        )
+        setChoferes(
+          (chJson.data ?? []).map((ch: { id: string; nombre: string }) => ({ id: ch.id, nombre: ch.nombre }))
+        )
+        setProductos(pJson.data ?? [])
+      })
+      .catch(() => {})
+      .finally(() => setLoadingData(false))
+  }, [])
+
+  const addItem = () =>
     setItems((prev) => [...prev, { productoId: '', cantidad: 1, precioCalculado: null }])
-  }
 
-  const removeItem = (idx: number) => {
+  const removeItem = (idx: number) =>
     setItems((prev) => prev.filter((_, i) => i !== idx))
-  }
 
   const updateItem = (idx: number, field: 'productoId' | 'cantidad', value: string) => {
     setItems((prev) =>
@@ -38,36 +63,24 @@ export default function NuevoPedidoPage() {
   const calcularPrecio = async (idx: number) => {
     const item = items[idx]
     if (!item.productoId || !clienteId) return
-
-    setCalculando(true)
     try {
       const res = await fetch('/api/precios/calcular', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productoId: item.productoId,
-          cantidad: item.cantidad,
-          clienteId,
-        }),
+        body: JSON.stringify({ productoId: item.productoId, cantidad: item.cantidad, clienteId }),
       })
       if (res.ok) {
         const json = await res.json() as { data?: { precio?: number } }
-        const precio = json.data?.precio ?? null
+        const precioCalc = json.data?.precio ?? null
         setItems((prev) =>
-          prev.map((it, i) => (i === idx ? { ...it, precioCalculado: precio } : it))
+          prev.map((it, i) => (i === idx ? { ...it, precioCalculado: precioCalc } : it))
         )
       }
-    } catch {
-      // silencioso — el precio simplemente no se muestra
-    } finally {
-      setCalculando(false)
-    }
+    } catch { /* silencioso */ }
   }
 
   const montoEstimado = items.reduce((sum, item) => {
-    if (item.precioCalculado !== null) {
-      return sum + item.precioCalculado * item.cantidad
-    }
+    if (item.precioCalculado !== null) return sum + item.precioCalculado * item.cantidad
     return sum
   }, 0)
 
@@ -92,18 +105,12 @@ export default function NuevoPedidoPage() {
           fecha_entrega_programada: fechaEntrega || undefined,
           origen: 'manual',
           notas: notas || undefined,
-          items: itemsValidos.map((it) => ({
-            producto_id: it.productoId,
-            cantidad: it.cantidad,
-          })),
+          items: itemsValidos.map((it) => ({ producto_id: it.productoId, cantidad: it.cantidad })),
         }),
       })
 
       const json = await res.json() as { error?: string }
-      if (!res.ok) {
-        throw new Error(json.error ?? 'Error al crear pedido')
-      }
-
+      if (!res.ok) throw new Error(json.error ?? 'Error al crear pedido')
       router.push('/admin/pedidos')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
@@ -115,7 +122,10 @@ export default function NuevoPedidoPage() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6">
-        <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Nuevo Pedido Manual</h2>
+        <Link href="/admin/pedidos" className="text-sm font-outfit text-gray-400 hover:text-gray-600 transition-colors">
+          ← Volver a pedidos
+        </Link>
+        <h2 className="font-nunito text-2xl font-extrabold text-gray-900 mt-1">Nuevo Pedido Manual</h2>
         <p className="text-sm font-outfit text-gray-500 mt-0.5">Crea un pedido directamente desde el panel</p>
       </div>
 
@@ -127,23 +137,44 @@ export default function NuevoPedidoPage() {
         )}
 
         {/* Cliente */}
-        <Input
-          label="ID del cliente"
-          id="cliente-id"
-          value={clienteId}
-          onChange={(e) => setClienteId(e.target.value)}
-          placeholder="UUID del cliente (opcional)"
-          helperText="Ingresa el ID del cliente para calcular precio automáticamente"
-        />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="cliente-id" className="font-medium text-sm text-gray-700 font-outfit">Cliente</label>
+          {loadingData ? (
+            <div className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+          ) : (
+            <select
+              id="cliente-id"
+              value={clienteId}
+              onChange={(e) => setClienteId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+            >
+              <option value="">Sin cliente asignado</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>{c.nombre}</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         {/* Chofer */}
-        <Input
-          label="ID del chofer"
-          id="chofer-id"
-          value={choferId}
-          onChange={(e) => setChoferId(e.target.value)}
-          placeholder="UUID del chofer (opcional)"
-        />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="chofer-id" className="font-medium text-sm text-gray-700 font-outfit">Chofer</label>
+          {loadingData ? (
+            <div className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+          ) : (
+            <select
+              id="chofer-id"
+              value={choferId}
+              onChange={(e) => setChoferId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+            >
+              <option value="">Sin chofer asignado</option>
+              {choferes.map((ch) => (
+                <option key={ch.id} value={ch.id}>{ch.nombre}</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         {/* Fecha de entrega */}
         <Input
@@ -158,11 +189,8 @@ export default function NuevoPedidoPage() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <span className="font-medium text-sm text-gray-700 font-outfit">Productos *</span>
-            <button
-              type="button"
-              onClick={addItem}
-              className="text-sm text-viflomax-verde font-outfit font-medium hover:underline"
-            >
+            <button type="button" onClick={addItem}
+              className="text-sm text-viflomax-verde font-outfit font-medium hover:underline">
               + Agregar producto
             </button>
           </div>
@@ -170,26 +198,27 @@ export default function NuevoPedidoPage() {
             {items.map((item, idx) => (
               <div key={idx} className="flex items-end gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex-1">
-                  <label className="text-xs font-outfit text-gray-600 font-medium block mb-1">
-                    ID Producto
-                  </label>
-                  <input
-                    type="text"
-                    value={item.productoId}
-                    onChange={(e) => updateItem(idx, 'productoId', e.target.value)}
-                    onBlur={() => calcularPrecio(idx)}
-                    placeholder="UUID del producto"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-outfit focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
-                  />
+                  <label className="text-xs font-outfit text-gray-600 font-medium block mb-1">Producto</label>
+                  {loadingData ? (
+                    <div className="h-9 bg-gray-200 rounded-lg animate-pulse" />
+                  ) : (
+                    <select
+                      value={item.productoId}
+                      onChange={(e) => updateItem(idx, 'productoId', e.target.value)}
+                      onBlur={() => calcularPrecio(idx)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-outfit focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+                    >
+                      <option value="">Seleccionar…</option>
+                      {productos.map((p) => (
+                        <option key={p.id} value={p.id}>{p.nombre}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div className="w-24">
-                  <label className="text-xs font-outfit text-gray-600 font-medium block mb-1">
-                    Cantidad
-                  </label>
+                  <label className="text-xs font-outfit text-gray-600 font-medium block mb-1">Cantidad</label>
                   <input
-                    type="number"
-                    min="1"
-                    value={item.cantidad}
+                    type="number" min="1" value={item.cantidad}
                     onChange={(e) => updateItem(idx, 'cantidad', e.target.value)}
                     onBlur={() => calcularPrecio(idx)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-outfit focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
@@ -201,12 +230,8 @@ export default function NuevoPedidoPage() {
                   </div>
                 )}
                 {items.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeItem(idx)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
-                    aria-label="Eliminar producto"
-                  >
+                  <button type="button" onClick={() => removeItem(idx)}
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" aria-label="Eliminar">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -215,9 +240,6 @@ export default function NuevoPedidoPage() {
               </div>
             ))}
           </div>
-          {calculando && (
-            <p className="text-xs font-outfit text-gray-400 mt-1">Calculando precio…</p>
-          )}
           {montoEstimado > 0 && (
             <div className="mt-3 text-right font-outfit font-semibold text-gray-800">
               Total estimado:{' '}
@@ -230,30 +252,20 @@ export default function NuevoPedidoPage() {
 
         {/* Notas */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="notas" className="font-medium text-sm text-gray-700 font-outfit">
-            Notas
-          </label>
+          <label htmlFor="notas" className="font-medium text-sm text-gray-700 font-outfit">Notas</label>
           <textarea
-            id="notas"
-            value={notas}
-            onChange={(e) => setNotas(e.target.value)}
-            rows={3}
+            id="notas" value={notas} onChange={(e) => setNotas(e.target.value)} rows={3}
             placeholder="Instrucciones de entrega, observaciones…"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul resize-none"
           />
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-4 py-2 text-sm font-outfit text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <button type="button" onClick={() => router.back()}
+            className="px-4 py-2 text-sm font-outfit text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             Cancelar
           </button>
-          <Button type="submit" variant="primary" loading={loading}>
-            Crear Pedido
-          </Button>
+          <Button type="submit" variant="primary" loading={loading}>Crear Pedido</Button>
         </div>
       </form>
     </div>

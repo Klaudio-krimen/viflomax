@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import type { PrecioMayorista } from '@/lib/types'
 import { AgregarTramoButton } from './AgregarTramoButton'
+import { NuevaEmpresaButton } from './NuevaEmpresaButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ function formatDate(d: Date): string {
 }
 
 export default async function PreciosMayoristasPage() {
-  const [empresas, tramos] = await Promise.all([
+  const [empresas, tramos, productos] = await Promise.all([
     db.empresa.findMany({
       where: { activo: true },
       orderBy: { razon_social: 'asc' },
@@ -30,7 +31,13 @@ export default async function PreciosMayoristasPage() {
     db.precioMayorista.findMany({
       orderBy: { vigente_desde: 'desc' },
     }),
+    db.producto.findMany({
+      where: { activo: true },
+      select: { id: true, nombre: true },
+    }),
   ])
+
+  const productoMap = new Map(productos.map((p) => [p.id, p.nombre]))
 
   const tramosList = tramos.map((t) => ({
     ...t,
@@ -45,14 +52,17 @@ export default async function PreciosMayoristasPage() {
 
   return (
     <div className="p-6 space-y-5">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/admin/precios"
-          className="text-sm font-outfit text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          ← Precios
-        </Link>
-        <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Precios Mayoristas</h2>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/admin/precios"
+            className="text-sm font-outfit text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            ← Precios
+          </Link>
+          <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Precios Mayoristas</h2>
+        </div>
+        <NuevaEmpresaButton />
       </div>
 
       {empresas.length === 0 ? (
@@ -87,7 +97,7 @@ export default async function PreciosMayoristasPage() {
                       <thead>
                         <tr className="bg-gray-50">
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                            Producto ID
+                            Producto
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                             Vol. Mín
@@ -106,8 +116,10 @@ export default async function PreciosMayoristasPage() {
                       <tbody className="divide-y divide-gray-100">
                         {tramosEmpresa.map((tramo) => (
                           <tr key={tramo.id} className="hover:bg-blue-50 transition-colors">
-                            <td className="px-4 py-2 text-gray-500 text-xs font-mono">
-                              {tramo.producto_id}
+                            <td className="px-4 py-2 text-gray-700">
+                              {productoMap.get(tramo.producto_id) ?? (
+                                <span className="text-gray-400 text-xs font-mono">{tramo.producto_id}</span>
+                              )}
                             </td>
                             <td className="px-4 py-2 text-gray-700">{tramo.volumen_minimo}</td>
                             <td className="px-4 py-2 text-gray-500">

@@ -21,9 +21,17 @@ function formatDate(d: Date): string {
 }
 
 export default async function PreciosSectoresPage() {
-  const precios = await db.precioDetalle.findMany({
-    orderBy: { vigente_desde: 'desc' },
-  })
+  const [precios, productos] = await Promise.all([
+    db.precioDetalle.findMany({
+      orderBy: { vigente_desde: 'desc' },
+    }),
+    db.producto.findMany({
+      where: { activo: true },
+      select: { id: true, nombre: true },
+    }),
+  ])
+
+  const productoMap = new Map(productos.map((p) => [p.id, p.nombre]))
 
   const preciosList = precios.map((p) => ({
     ...p,
@@ -72,7 +80,7 @@ export default async function PreciosSectoresPage() {
                     <thead>
                       <tr className="bg-gray-50">
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                          Producto ID
+                          Producto
                         </th>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                           Cant. Mín
@@ -91,8 +99,10 @@ export default async function PreciosSectoresPage() {
                     <tbody className="divide-y divide-gray-100">
                       {preciosSector.map((precio) => (
                         <tr key={precio.id} className="hover:bg-blue-50 transition-colors">
-                          <td className="px-4 py-2 text-gray-500 text-xs font-mono">
-                            {precio.producto_id}
+                          <td className="px-4 py-2 text-gray-700">
+                            {productoMap.get(precio.producto_id) ?? (
+                              <span className="text-gray-400 text-xs font-mono">{precio.producto_id}</span>
+                            )}
                           </td>
                           <td className="px-4 py-2 text-gray-700">{precio.cantidad_minima}</td>
                           <td className="px-4 py-2 text-gray-500">

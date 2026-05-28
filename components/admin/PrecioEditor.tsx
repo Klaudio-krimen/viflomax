@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, FormEvent } from 'react'
+import React, { useState, useEffect, FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
@@ -13,18 +13,7 @@ type PrecioEditorProps = {
   onCancel: () => void
 }
 
-type ProductoOption = {
-  id: string
-  nombre: string
-}
-
-// Productos de ejemplo (en producción vendría de Supabase vía props o fetch)
-const PRODUCTOS_EJEMPLO: ProductoOption[] = [
-  { id: 'prod-1', nombre: 'Bidón 20L' },
-  { id: 'prod-2', nombre: 'Bidón 10L' },
-  { id: 'prod-3', nombre: 'Recarga 20L' },
-  { id: 'prod-4', nombre: 'Dispensador' },
-]
+type ProductoOption = { id: string; nombre: string; categoria: string }
 
 function validarVolumenes(min: string, max: string): string | null {
   if (!min) return null
@@ -38,8 +27,11 @@ function validarVolumenes(min: string, max: string): string | null {
 }
 
 export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditorProps) {
+  const [productos, setProductos] = useState<ProductoOption[]>([])
+  const [loadingProductos, setLoadingProductos] = useState(true)
+
   const [productoId, setProductoId] = useState('')
-  const [volMin, setVolMin] = useState('')
+  const [volMin, setVolMin] = useState('1')
   const [volMax, setVolMax] = useState('')
   const [precio, setPrecio] = useState('')
   const [sector, setSector] = useState('')
@@ -47,6 +39,14 @@ export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditor
   const [vigentHasta, setVigentHasta] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/productos')
+      .then((r) => r.json())
+      .then((json: { data?: ProductoOption[] }) => setProductos(json.data ?? []))
+      .catch(() => setProductos([]))
+      .finally(() => setLoadingProductos(false))
+  }, [])
 
   const volError = validarVolumenes(volMin, volMax)
 
@@ -61,7 +61,6 @@ export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditor
     setLoading(true)
     try {
       const endpoint = tipo === 'mayorista' ? '/api/precios/mayoristas' : '/api/precios/sectores'
-
       const body =
         tipo === 'mayorista'
           ? {
@@ -93,7 +92,6 @@ export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditor
         const json = await res.json().catch(() => ({}))
         throw new Error((json as { error?: string }).error ?? 'Error al guardar')
       }
-
       onSave()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
@@ -115,18 +113,26 @@ export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditor
         <label htmlFor="pe-producto" className="font-medium text-sm text-gray-700 font-outfit">
           Producto <span className="text-red-500" aria-hidden="true">*</span>
         </label>
-        <select
-          id="pe-producto"
-          required
-          value={productoId}
-          onChange={(e) => setProductoId(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
-        >
-          <option value="">Seleccionar producto…</option>
-          {PRODUCTOS_EJEMPLO.map((p) => (
-            <option key={p.id} value={p.id}>{p.nombre}</option>
-          ))}
-        </select>
+        {loadingProductos ? (
+          <div className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+        ) : productos.length === 0 ? (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-outfit">
+            No hay productos. Crea productos primero en Inventario.
+          </p>
+        ) : (
+          <select
+            id="pe-producto"
+            required
+            value={productoId}
+            onChange={(e) => setProductoId(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+          >
+            <option value="">Seleccionar producto…</option>
+            {productos.map((p) => (
+              <option key={p.id} value={p.id}>{p.nombre} ({p.categoria})</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Sector (solo detalle) */}
@@ -141,62 +147,33 @@ export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditor
         />
       )}
 
-      {/* Volumen / cantidad mínima y máxima */}
+      {/* Volúmenes */}
       <div className="grid grid-cols-2 gap-3">
         <Input
           label={tipo === 'mayorista' ? 'Vol. mínimo' : 'Cant. mínima'}
-          id="pe-vol-min"
-          type="number"
-          min="0"
-          step="1"
-          required
-          value={volMin}
-          onChange={(e) => setVolMin(e.target.value)}
-          placeholder="1"
+          id="pe-vol-min" type="number" min="1" step="1" required
+          value={volMin} onChange={(e) => setVolMin(e.target.value)}
           error={volError ?? undefined}
         />
         <Input
           label={tipo === 'mayorista' ? 'Vol. máximo' : 'Cant. máxima'}
-          id="pe-vol-max"
-          type="number"
-          min="0"
-          step="1"
-          value={volMax}
-          onChange={(e) => setVolMax(e.target.value)}
-          placeholder="sin límite"
-          helperText="Opcional"
+          id="pe-vol-max" type="number" min="1" step="1"
+          value={volMax} onChange={(e) => setVolMax(e.target.value)}
+          placeholder="sin límite" helperText="Opcional"
         />
       </div>
 
-      {/* Precio */}
       <Input
-        label="Precio (CLP)"
-        id="pe-precio"
-        type="number"
-        min="0"
-        step="1"
-        required
-        value={precio}
-        onChange={(e) => setPrecio(e.target.value)}
-        placeholder="ej: 2500"
+        label="Precio (CLP)" id="pe-precio" type="number" min="0" step="1" required
+        value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder="ej: 2500"
       />
 
-      {/* Vigencias */}
       <div className="grid grid-cols-2 gap-3">
-        <Input
-          label="Vigente desde"
-          id="pe-desde"
-          type="date"
-          required
-          value={vigentDesde}
-          onChange={(e) => setVigentDesde(e.target.value)}
+        <Input label="Vigente desde" id="pe-desde" type="date" required
+          value={vigentDesde} onChange={(e) => setVigentDesde(e.target.value)}
         />
-        <Input
-          label="Vigente hasta"
-          id="pe-hasta"
-          type="date"
-          value={vigentHasta}
-          onChange={(e) => setVigentHasta(e.target.value)}
+        <Input label="Vigente hasta" id="pe-hasta" type="date"
+          value={vigentHasta} onChange={(e) => setVigentHasta(e.target.value)}
           helperText="Opcional"
         />
       </div>
@@ -205,7 +182,8 @@ export function PrecioEditor({ tipo, empresaId, onSave, onCancel }: PrecioEditor
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={loading}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary" size="sm" loading={loading}>
+        <Button type="submit" variant="primary" size="sm" loading={loading}
+          disabled={loadingProductos || productos.length === 0}>
           Guardar
         </Button>
       </div>

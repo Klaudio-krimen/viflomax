@@ -4,6 +4,34 @@ import { db } from '@/lib/db'
 import type { ApiResponse } from '@/lib/types'
 
 /**
+ * GET /api/productos
+ * Lista todos los productos activos. Admin y chofer.
+ */
+export async function GET(request: NextRequest) {
+  const token = await getToken({ req: request })
+  if (!token) {
+    return NextResponse.json({ data: null, error: 'No autenticado' }, { status: 401 })
+  }
+
+  try {
+    const productos = await db.producto.findMany({
+      where: { activo: true },
+      orderBy: { nombre: 'asc' },
+      select: { id: true, nombre: true, categoria: true, precio_base: true },
+    })
+
+    const list = productos.map((p) => ({
+      ...p,
+      precio_base: p.precio_base ? Number(p.precio_base) : null,
+    }))
+
+    return NextResponse.json({ data: list, total: list.length, error: null })
+  } catch {
+    return NextResponse.json({ data: null, error: 'Error al obtener productos' }, { status: 500 })
+  }
+}
+
+/**
  * POST /api/productos
  * Crea un producto nuevo + su registro de inventario en una transacción.
  * Solo admin.

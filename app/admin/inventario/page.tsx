@@ -24,9 +24,11 @@ export default async function InventarioPage() {
 
   return (
     <div className="p-6 space-y-5">
-      <div>
-        <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Inventario</h2>
-        <p className="text-sm font-outfit text-gray-500 mt-0.5">Control de stock de productos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Inventario</h2>
+          <p className="text-sm font-outfit text-gray-500 mt-0.5">Control de stock de productos</p>
+        </div>
       </div>
       <InventarioTable inventario={inventarioList} />
     </div>

@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { RegistrarEntregaForm } from '@/components/chofer/RegistrarEntregaForm'
 import type { PedidoConDetalle } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Registrar Entrega — Viflomax' }
 
 type PageProps = { params: Promise<{ id: string }> }

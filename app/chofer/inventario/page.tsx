@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import type { Inventario, Producto } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Inventario — Viflomax Chofer' }
 
 type InventarioConProducto = Inventario & {

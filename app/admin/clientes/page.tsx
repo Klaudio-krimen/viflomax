@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/Button'
 import type { ClienteConEmpresa } from '@/lib/types'
 import { Prisma } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Clientes — Viflomax Admin' }
 
 type SearchParams = { q?: string }

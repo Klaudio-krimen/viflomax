@@ -4,6 +4,8 @@ import { Badge, estadoPedidoBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { PedidoConDetalle } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Pedidos — Viflomax Admin' }
 
 const PAGE_SIZE = 20

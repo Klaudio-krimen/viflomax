@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { Badge, estadoPedidoBadge } from '@/components/ui/Badge'
 import type { ClienteConEmpresa, Pedido } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Ficha de Cliente — Viflomax Admin' }
 
 const TIPO_BADGE: Record<string, { variant: 'success' | 'info' | 'default'; label: string }> = {

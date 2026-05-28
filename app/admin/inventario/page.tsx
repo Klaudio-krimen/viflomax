@@ -3,6 +3,8 @@ import { db } from '@/lib/db'
 import type { Inventario, Producto } from '@/lib/types'
 import { InventarioTable } from './InventarioTable'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Inventario — Viflomax Admin' }
 
 export type InventarioConProducto = Inventario & {

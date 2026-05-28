@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import type { PrecioDetalle } from '@/lib/types'
 import { NuevoPrecioButton } from './NuevoPrecioButton'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Precios Sectores — Viflomax Admin' }
 
 function formatCLP(amount: number): string {

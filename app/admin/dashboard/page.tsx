@@ -3,6 +3,8 @@ import { DashboardStats } from '@/components/admin/DashboardStats'
 import { Badge, estadoPedidoBadge } from '@/components/ui/Badge'
 import type { PedidoConDetalle } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Dashboard — Viflomax Admin' }
 
 function formatCLP(amount: number | null): string {

@@ -6,6 +6,8 @@ import { EntregaItem } from '@/components/chofer/EntregaItem'
 import { formatFecha } from '@/lib/utils'
 import type { Pedido, Cliente, PedidoItem, Producto } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Mis Entregas — Viflomax' }
 
 type PedidoConItems = Pedido & {

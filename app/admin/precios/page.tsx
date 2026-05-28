@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Precios — Viflomax Admin' }
 
 export default async function PreciosPage() {

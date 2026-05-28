@@ -1,15 +1,10 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { signOut } from 'next-auth/react'
 
 export function CerrarSesionBtn() {
-  const router = useRouter()
-
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/login' })
   }
 
   return (

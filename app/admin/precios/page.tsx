@@ -1,23 +1,22 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 
 export const metadata = { title: 'Precios — Viflomax Admin' }
 
 export default async function PreciosPage() {
-  const supabase = await createClient()
-
-  const [{ count: totalEmpresas }, { count: totalMayoristas }, { count: totalDetalle }] =
-    await Promise.all([
-      supabase.from('empresas').select('*', { count: 'exact', head: true }).eq('activo', true),
-      supabase.from('precios_mayoristas').select('*', { count: 'exact', head: true }),
-      supabase.from('precios_detalle').select('*', { count: 'exact', head: true }),
-    ])
+  const [totalEmpresas, totalMayoristas, totalDetalle] = await Promise.all([
+    db.empresa.count({ where: { activo: true } }),
+    db.precioMayorista.count(),
+    db.precioDetalle.count(),
+  ])
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Precios</h2>
-        <p className="text-sm font-outfit text-gray-500 mt-0.5">Gestión de precios mayoristas y por sector</p>
+        <p className="text-sm font-outfit text-gray-500 mt-0.5">
+          Gestión de precios mayoristas y por sector
+        </p>
       </div>
 
       {/* Tabs / sub-navegación */}
@@ -39,15 +38,15 @@ export default async function PreciosPage() {
       {/* Resumen */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-5">
-          <p className="text-3xl font-nunito font-extrabold text-gray-900">{totalEmpresas ?? 0}</p>
+          <p className="text-3xl font-nunito font-extrabold text-gray-900">{totalEmpresas}</p>
           <p className="text-sm font-outfit text-gray-500 mt-0.5">Empresas mayoristas activas</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-5">
-          <p className="text-3xl font-nunito font-extrabold text-gray-900">{totalMayoristas ?? 0}</p>
+          <p className="text-3xl font-nunito font-extrabold text-gray-900">{totalMayoristas}</p>
           <p className="text-sm font-outfit text-gray-500 mt-0.5">Tramos de precio mayorista</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-5">
-          <p className="text-3xl font-nunito font-extrabold text-gray-900">{totalDetalle ?? 0}</p>
+          <p className="text-3xl font-nunito font-extrabold text-gray-900">{totalDetalle}</p>
           <p className="text-sm font-outfit text-gray-500 mt-0.5">Tramos de precio detalle</p>
         </div>
       </div>

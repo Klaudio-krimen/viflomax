@@ -1,14 +1,14 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { Badge, estadoPedidoBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import type { EstadoPedido, PedidoConDetalle } from '@/lib/types'
+import type { PedidoConDetalle } from '@/lib/types'
 
 export const metadata = { title: 'Pedidos — Viflomax Admin' }
 
 const PAGE_SIZE = 20
 
-const ESTADOS: { value: string; label: string }[] = [
+const ESTADOS = [
   { value: '', label: 'Todos los estados' },
   { value: 'nuevo', label: 'Nuevo' },
   { value: 'confirmado', label: 'Confirmado' },
@@ -19,18 +19,18 @@ const ESTADOS: { value: string; label: string }[] = [
 
 function formatCLP(amount: number | null): string {
   if (amount === null) return '—'
-  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount)
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-type SearchParams = {
-  estado?: string
-  fecha?: string
-  pagina?: string
-}
+type SearchParams = { estado?: string; fecha?: string; pagina?: string }
 
 export default async function PedidosPage({
   searchParams,
@@ -38,32 +38,45 @@ export default async function PedidosPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
-
   const estado = params.estado ?? ''
   const fecha = params.fecha ?? ''
   const pagina = Math.max(1, Number(params.pagina ?? 1))
   const offset = (pagina - 1) * PAGE_SIZE
 
-  let query = supabase
-    .from('pedidos')
-    .select('*, cliente:clientes(id, nombre, telefono)', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + PAGE_SIZE - 1)
-
-  if (estado) {
-    query = query.eq('estado', estado as EstadoPedido)
-  }
+  // Construir filtro where
+  const where: Record<string, unknown> = {}
+  if (estado) where.estado = estado
   if (fecha) {
-    query = query.gte('created_at', `${fecha}T00:00:00`).lte('created_at', `${fecha}T23:59:59`)
+    const d = new Date(fecha)
+    const inicio = new Date(d)
+    inicio.setHours(0, 0, 0, 0)
+    const fin = new Date(d)
+    fin.setHours(23, 59, 59, 999)
+    where.created_at = { gte: inicio, lte: fin }
   }
 
-  const { data: pedidos, count } = await query
+  const [pedidos, total] = await Promise.all([
+    db.pedido.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      skip: offset,
+      take: PAGE_SIZE,
+      include: { cliente: { select: { id: true, nombre: true, telefono: true } } },
+    }),
+    db.pedido.count({ where }),
+  ])
 
-  const totalPaginas = Math.ceil((count ?? 0) / PAGE_SIZE)
-  const pedidosList = (pedidos ?? []) as PedidoConDetalle[]
+  const totalPaginas = Math.ceil(total / PAGE_SIZE)
 
-  // Build URL helper
+  // Adaptar tipos
+  const pedidosList = pedidos.map((p) => ({
+    ...p,
+    fecha_pedido: p.fecha_pedido.toISOString(),
+    created_at: p.created_at.toISOString(),
+    monto_total: p.monto_total ? Number(p.monto_total) : null,
+    fecha_entrega_programada: p.fecha_entrega_programada?.toISOString() ?? null,
+  })) as unknown as PedidoConDetalle[]
+
   function buildUrl(overrides: Partial<SearchParams>): string {
     const p = { estado, fecha, pagina: String(pagina), ...overrides }
     const qs = new URLSearchParams()
@@ -79,11 +92,19 @@ export default async function PedidosPage({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Pedidos</h2>
-          <p className="text-sm font-outfit text-gray-500 mt-0.5">{count ?? 0} pedidos encontrados</p>
+          <p className="text-sm font-outfit text-gray-500 mt-0.5">{total} pedidos encontrados</p>
         </div>
         <Link href="/admin/pedidos/nuevo">
           <Button variant="primary" size="sm">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             Nuevo Pedido
@@ -92,45 +113,55 @@ export default async function PedidosPage({
       </div>
 
       {/* Filtros */}
-      <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-3 items-end">
+      <form
+        action="/admin/pedidos"
+        method="GET"
+        className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex flex-wrap gap-3 items-end"
+      >
         <div className="flex flex-col gap-1">
-          <label htmlFor="filtro-estado" className="text-xs font-outfit text-gray-600 font-medium">Estado</label>
-          <form>
-            <select
-              id="filtro-estado"
-              name="estado"
-              defaultValue={estado}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
-            >
-              {ESTADOS.map((e) => (
-                <option key={e.value} value={e.value}>{e.label}</option>
-              ))}
-            </select>
-          </form>
+          <label htmlFor="filtro-estado" className="text-xs font-outfit text-gray-600 font-medium">
+            Estado
+          </label>
+          <select
+            id="filtro-estado"
+            name="estado"
+            defaultValue={estado}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
+          >
+            {ESTADOS.map((e) => (
+              <option key={e.value} value={e.value}>
+                {e.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="filtro-fecha" className="text-xs font-outfit text-gray-600 font-medium">Fecha</label>
+          <label htmlFor="filtro-fecha" className="text-xs font-outfit text-gray-600 font-medium">
+            Fecha
+          </label>
           <input
             id="filtro-fecha"
             type="date"
             defaultValue={fecha}
             name="fecha"
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-outfit text-gray-900 focus:outline-none focus:ring-2 focus:ring-viflomax-azul"
-            form="filtros-form"
           />
         </div>
-        <form id="filtros-form" action="/admin/pedidos" method="GET">
-          <input type="hidden" name="estado" value={estado} />
-          <button type="submit" className="px-4 py-1.5 bg-viflomax-verde text-white text-sm font-outfit rounded-lg hover:bg-viflomax-verde-claro transition-colors">
-            Filtrar
-          </button>
-        </form>
+        <button
+          type="submit"
+          className="px-4 py-1.5 bg-viflomax-verde text-white text-sm font-outfit rounded-lg hover:bg-viflomax-verde-claro transition-colors"
+        >
+          Filtrar
+        </button>
         {(estado || fecha) && (
-          <Link href="/admin/pedidos" className="px-4 py-1.5 border border-gray-300 text-gray-700 text-sm font-outfit rounded-lg hover:bg-gray-50 transition-colors">
+          <Link
+            href="/admin/pedidos"
+            className="px-4 py-1.5 border border-gray-300 text-gray-700 text-sm font-outfit rounded-lg hover:bg-gray-50 transition-colors"
+          >
             Limpiar
           </Link>
         )}
-      </div>
+      </form>
 
       {/* Tabla */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -143,13 +174,27 @@ export default async function PedidosPage({
             <table className="w-full text-sm font-outfit">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">N° Pedido</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Cliente</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Estado</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Total</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Origen</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Fecha</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Acciones</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    N° Pedido
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Cliente
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Total
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Origen
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -161,14 +206,20 @@ export default async function PedidosPage({
                         {pedido.numero_pedido ? `#${pedido.numero_pedido}` : '—'}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {pedido.cliente?.nombre ?? <span className="text-gray-400 italic">Sin cliente</span>}
+                        {pedido.cliente?.nombre ?? (
+                          <span className="text-gray-400 italic">Sin cliente</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
+                        <Badge variant={badge.variant} size="sm">
+                          {badge.label}
+                        </Badge>
                       </td>
                       <td className="px-4 py-3 text-gray-700">{formatCLP(pedido.monto_total)}</td>
                       <td className="px-4 py-3 text-gray-500 capitalize">{pedido.origen}</td>
-                      <td className="px-4 py-3 text-gray-500">{formatDate(pedido.created_at)}</td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {formatDate(new Date(pedido.created_at))}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Link
@@ -177,9 +228,6 @@ export default async function PedidosPage({
                           >
                             Ver
                           </Link>
-                          <span className="px-2.5 py-1 text-xs bg-gray-50 text-gray-500 rounded-lg border border-gray-200 cursor-not-allowed">
-                            Asignar Chofer
-                          </span>
                         </div>
                       </td>
                     </tr>

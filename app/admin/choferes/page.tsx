@@ -1,17 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import type { Chofer } from '@/lib/types'
 import { ChoferesClient } from './ChoferesClient'
 
 export const metadata = { title: 'Choferes — Viflomax Admin' }
 
 export default async function ChoferesPage() {
-  const supabase = await createClient()
+  const choferes = await db.chofer.findMany({
+    orderBy: [{ activo: 'desc' }, { nombre: 'asc' }],
+  })
 
-  const { data: choferes } = await supabase
-    .from('choferes')
-    .select('*')
-    .order('activo', { ascending: false }) // activos primero
-    .order('nombre', { ascending: true })
-
-  return <ChoferesClient choferes={(choferes ?? []) as Chofer[]} />
+  return <ChoferesClient choferes={choferes as unknown as Chofer[]} />
 }

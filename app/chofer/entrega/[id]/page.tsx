@@ -1,62 +1,78 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { auth } from '@/lib/auth'
+import { db } from '@/lib/db'
 import { RegistrarEntregaForm } from '@/components/chofer/RegistrarEntregaForm'
 import type { PedidoConDetalle } from '@/lib/types'
 
 export const metadata = { title: 'Registrar Entrega — Viflomax' }
 
-type PageProps = {
-  params: Promise<{ id: string }>
-}
+type PageProps = { params: Promise<{ id: string }> }
 
 export default async function EntregaPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createClient()
+  const session = await auth()
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+  if (!session?.user) redirect('/login')
 
-  if (authError || !user) redirect('/login')
+  const pedidoRaw = await db.pedido.findUnique({
+    where: { id },
+    include: {
+      cliente: true,
+      empresa: true,
+      chofer: true,
+      items: { include: { producto: true } },
+      entrega: true,
+    },
+  })
 
-  const { data: pedido, error } = await supabase
-    .from('pedidos')
-    .select(
-      `
-      *,
-      cliente:clientes(id, nombre, telefono, email, direccion, comuna, sector, tipo_cliente, empresa_id, activo, notas, created_at),
-      empresa:empresas(id, razon_social, rut, contacto, telefono, email, direccion, activo, notas_comerciales, created_at),
-      chofer:choferes(id, user_id, nombre, telefono, vehiculo, activo),
-      items:pedido_items(
-        id, pedido_id, producto_id, cantidad, precio_unitario, precio_origen, subtotal,
-        producto:productos(id, nombre, descripcion, categoria, precio_base, activo)
-      ),
-      entrega:entregas(id, pedido_id, chofer_id, timestamp_entrega, latitud, longitud, bidones_vacios_recibidos, monto_cobrado, metodo_pago, foto_url, observaciones)
-    `
-    )
-    .eq('id', id)
-    .single()
+  if (!pedidoRaw) notFound()
 
-  if (error || !pedido) {
-    notFound()
+  // Verificar acceso del chofer
+  if (session.user.role === 'chofer') {
+    const chofer = await db.chofer.findUnique({
+      where: { user_id: session.user.id },
+      select: { id: true },
+    })
+    if (!chofer || pedidoRaw.chofer_id !== chofer.id) {
+      redirect('/chofer')
+    }
   }
 
-  const pedidoConDetalle = pedido as PedidoConDetalle
-
-  // Verificar que el chofer tiene acceso a este pedido
-  const rol = user.app_metadata?.role as string | undefined
-  const choferIdMeta = user.app_metadata?.chofer_id as string | undefined
-
-  if (rol === 'chofer' && pedidoConDetalle.chofer_id !== choferIdMeta) {
+  // Si ya fue entregado, redirigir
+  if (pedidoRaw.estado === 'entregado') {
     redirect('/chofer')
   }
 
-  // Si ya fue entregado, redirigir al listado
-  if (pedidoConDetalle.estado === 'entregado') {
-    redirect('/chofer')
-  }
+  // Adaptar tipos
+  const pedidoConDetalle = {
+    ...pedidoRaw,
+    fecha_pedido: pedidoRaw.fecha_pedido.toISOString(),
+    created_at: pedidoRaw.created_at.toISOString(),
+    monto_total: pedidoRaw.monto_total ? Number(pedidoRaw.monto_total) : null,
+    fecha_entrega_programada: pedidoRaw.fecha_entrega_programada?.toISOString() ?? null,
+    cliente: pedidoRaw.cliente
+      ? { ...pedidoRaw.cliente, created_at: pedidoRaw.cliente.created_at.toISOString() }
+      : null,
+    empresa: pedidoRaw.empresa
+      ? { ...pedidoRaw.empresa, created_at: pedidoRaw.empresa.created_at.toISOString() }
+      : null,
+    items: pedidoRaw.items.map((item) => ({
+      ...item,
+      precio_unitario: Number(item.precio_unitario),
+      subtotal: Number(item.subtotal),
+      producto: { ...item.producto, precio_base: item.producto.precio_base ? Number(item.producto.precio_base) : null },
+    })),
+    entrega: pedidoRaw.entrega
+      ? {
+          ...pedidoRaw.entrega,
+          timestamp_entrega: pedidoRaw.entrega.timestamp_entrega.toISOString(),
+          monto_cobrado: pedidoRaw.entrega.monto_cobrado ? Number(pedidoRaw.entrega.monto_cobrado) : null,
+          latitud: pedidoRaw.entrega.latitud ? Number(pedidoRaw.entrega.latitud) : null,
+          longitud: pedidoRaw.entrega.longitud ? Number(pedidoRaw.entrega.longitud) : null,
+        }
+      : null,
+  } as unknown as PedidoConDetalle
 
   return (
     <div className="space-y-4">
@@ -80,9 +96,7 @@ export default async function EntregaPage({ params }: PageProps) {
           </svg>
         </Link>
         <div>
-          <h1 className="font-nunito font-extrabold text-xl text-gray-900">
-            Registrar Entrega
-          </h1>
+          <h1 className="font-nunito font-extrabold text-xl text-gray-900">Registrar Entrega</h1>
           {pedidoConDetalle.numero_pedido && (
             <p className="font-outfit text-sm text-gray-500">
               Pedido #{pedidoConDetalle.numero_pedido}
@@ -100,9 +114,7 @@ export default async function EntregaPage({ params }: PageProps) {
           {pedidoConDetalle.cliente.direccion && (
             <p className="font-outfit text-sm text-gray-600 mt-0.5">
               {pedidoConDetalle.cliente.direccion}
-              {pedidoConDetalle.cliente.comuna
-                ? `, ${pedidoConDetalle.cliente.comuna}`
-                : ''}
+              {pedidoConDetalle.cliente.comuna ? `, ${pedidoConDetalle.cliente.comuna}` : ''}
             </p>
           )}
           {pedidoConDetalle.cliente.telefono && (

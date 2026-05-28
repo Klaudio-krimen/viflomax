@@ -1,0 +1,219 @@
+// Viflomax — Prisma Schema
+// Migrado desde Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// AUTH — NextAuth v4 requeridos + campos custom
+// ============================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // hasheado con bcryptjs
+  role          String    @default("publico") // 'admin' | 'chofer' | 'publico'
+  createdAt     DateTime  @default(now())
+  accounts      Account[]
+  sessions      Session[]
+  chofer        Chofer?
+}
+
+// ============================================================
+// NEGOCIO — Tablas principales
+// ============================================================
+
+model Empresa {
+  id                String            @id @default(uuid())
+  razon_social      String
+  rut               String?
+  contacto          String?
+  telefono          String?
+  email             String?
+  direccion         String?
+  activo            Boolean           @default(true)
+  notas_comerciales String?
+  created_at        DateTime          @default(now())
+  clientes          Cliente[]
+  pedidos           Pedido[]
+  precios_mayorista PrecioMayorista[]
+}
+
+model Producto {
+  id                String            @id @default(uuid())
+  nombre            String
+  descripcion       String?
+  categoria         String // 'envase' | 'recarga' | 'dispensador' | 'accesorio'
+  precio_base       Decimal?          @db.Decimal(10, 2)
+  activo            Boolean           @default(true)
+  inventario        Inventario?
+  pedido_items      PedidoItem[]
+  precios_mayorista PrecioMayorista[]
+  precios_detalle   PrecioDetalle[]
+}
+
+model Cliente {
+  id           String    @id @default(uuid())
+  nombre       String
+  telefono     String?
+  email        String?
+  direccion    String?
+  comuna       String?
+  sector       String?
+  tipo_cliente String    @default("nuevo") // 'mayorista' | 'detalle' | 'nuevo'
+  empresa_id   String?
+  activo       Boolean   @default(true)
+  notas        String?
+  created_at   DateTime  @default(now())
+  empresa      Empresa?  @relation(fields: [empresa_id], references: [id], onDelete: SetNull)
+  pedidos      Pedido[]
+}
+
+model Chofer {
+  id       String    @id @default(uuid())
+  user_id  String?   @unique
+  nombre   String
+  telefono String?
+  vehiculo String?
+  activo   Boolean   @default(true)
+  user     User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  pedidos  Pedido[]
+  entregas Entrega[]
+}
+
+model Pedido {
+  id                       String       @id @default(uuid())
+  numero_pedido            String?      @unique
+  cliente_id               String?
+  empresa_id               String?
+  chofer_id                String?
+  fecha_pedido             DateTime     @default(now())
+  fecha_entrega_programada DateTime?    @db.Date
+  estado                   String       @default("nuevo") // 'nuevo'|'confirmado'|'en_ruta'|'entregado'|'cancelado'
+  origen                   String       @default("manual") // 'web'|'whatsapp'|'telefono'|'manual'
+  monto_total              Decimal?     @db.Decimal(10, 2)
+  notas                    String?
+  created_at               DateTime     @default(now())
+  cliente                  Cliente?     @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
+  empresa                  Empresa?     @relation(fields: [empresa_id], references: [id], onDelete: SetNull)
+  chofer                   Chofer?      @relation(fields: [chofer_id], references: [id], onDelete: SetNull)
+  items                    PedidoItem[]
+  entrega                  Entrega?
+}
+
+model PedidoItem {
+  id              String   @id @default(uuid())
+  pedido_id       String
+  producto_id     String
+  cantidad        Int
+  precio_unitario Decimal  @db.Decimal(10, 2)
+  precio_origen   String? // 'mayorista'|'detalle_sector'|'detalle_generico'|'base'|'manual'|'sin_precio'
+  subtotal        Decimal  @db.Decimal(10, 2) // cantidad * precio_unitario (calculado en app)
+  pedido          Pedido   @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  producto        Producto @relation(fields: [producto_id], references: [id])
+}
+
+model Entrega {
+  id                       String    @id @default(uuid())
+  pedido_id                String    @unique
+  chofer_id                String
+  timestamp_entrega        DateTime  @default(now())
+  latitud                  Decimal?  @db.Decimal(10, 7)
+  longitud                 Decimal?  @db.Decimal(10, 7)
+  bidones_vacios_recibidos Int       @default(0)
+  monto_cobrado            Decimal?  @db.Decimal(10, 2)
+  metodo_pago              String? // 'efectivo'|'transferencia'|'pendiente'
+  foto_url                 String? // URL de Cloudinary
+  observaciones            String?
+  pedido                   Pedido    @relation(fields: [pedido_id], references: [id])
+  chofer                   Chofer    @relation(fields: [chofer_id], references: [id])
+}
+
+model Inventario {
+  id                  String   @id @default(uuid())
+  producto_id         String   @unique
+  stock_bodega        Int      @default(0)
+  stock_vacios_bodega Int      @default(0)
+  stock_en_ruta       Int      @default(0)
+  stock_minimo_alerta Int      @default(5)
+  updated_at          DateTime @updatedAt
+  producto            Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+}
+
+model PrecioMayorista {
+  id             String    @id @default(uuid())
+  empresa_id     String
+  producto_id    String
+  volumen_minimo Int       @default(1)
+  volumen_maximo Int?
+  precio         Decimal   @db.Decimal(10, 2)
+  notas          String?
+  vigente_desde  DateTime  @default(now()) @db.Date
+  vigente_hasta  DateTime? @db.Date
+  creado_por     String?
+  created_at     DateTime  @default(now())
+  empresa        Empresa   @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  producto       Producto  @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+
+  @@unique([empresa_id, producto_id, volumen_minimo])
+}
+
+model PrecioDetalle {
+  id              String    @id @default(uuid())
+  producto_id     String
+  sector          String?
+  cantidad_minima Int       @default(1)
+  cantidad_maxima Int?
+  precio          Decimal   @db.Decimal(10, 2)
+  notas           String?
+  vigente_desde   DateTime  @default(now()) @db.Date
+  vigente_hasta   DateTime? @db.Date
+  created_at      DateTime  @default(now())
+  producto        Producto  @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+
+  @@unique([producto_id, sector, cantidad_minima])
+}

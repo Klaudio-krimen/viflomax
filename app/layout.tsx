@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Nunito, Outfit } from 'next/font/google'
+import { SessionProvider } from '@/components/providers/SessionProvider'
 import './globals.css'
 
 const nunito = Nunito({
@@ -26,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${nunito.variable} ${outfit.variable} font-outfit antialiased`}
       >
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   )

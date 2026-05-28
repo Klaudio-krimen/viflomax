@@ -1,5 +1,5 @@
 import React from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import type { Inventario, Producto } from '@/lib/types'
 import { InventarioTable } from './InventarioTable'
 
@@ -10,14 +10,15 @@ export type InventarioConProducto = Inventario & {
 }
 
 export default async function InventarioPage() {
-  const supabase = await createClient()
+  const inventario = await db.inventario.findMany({
+    orderBy: { updated_at: 'desc' },
+    include: { producto: { select: { id: true, nombre: true, categoria: true } } },
+  })
 
-  const { data: inventario } = await supabase
-    .from('inventario')
-    .select('*, producto:productos(id, nombre, categoria)')
-    .order('updated_at', { ascending: false })
-
-  const inventarioList = (inventario ?? []) as InventarioConProducto[]
+  const inventarioList = inventario.map((i) => ({
+    ...i,
+    updated_at: i.updated_at.toISOString(),
+  })) as unknown as InventarioConProducto[]
 
   return (
     <div className="p-6 space-y-5">

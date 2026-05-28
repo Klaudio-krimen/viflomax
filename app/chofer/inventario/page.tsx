@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import type { Inventario, Producto } from '@/lib/types'
 
 export const metadata = { title: 'Inventario — Viflomax Chofer' }
@@ -9,13 +8,7 @@ type InventarioConProducto = Inventario & {
   producto: Pick<Producto, 'id' | 'nombre' | 'categoria'> | null
 }
 
-function AlertaStock({
-  stock,
-  minimo,
-}: {
-  stock: number
-  minimo: number
-}) {
+function AlertaStock({ stock, minimo }: { stock: number; minimo: number }) {
   if (stock <= 0) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-outfit font-semibold text-rose-700 bg-rose-50 rounded-full px-2 py-0.5">
@@ -38,21 +31,15 @@ function AlertaStock({
 }
 
 export default async function InventarioChoferPage() {
-  const supabase = await createClient()
+  const inventario = await db.inventario.findMany({
+    orderBy: { updated_at: 'desc' },
+    include: { producto: { select: { id: true, nombre: true, categoria: true } } },
+  })
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-
-  if (authError || !user) redirect('/login')
-
-  const { data: inventario } = await supabase
-    .from('inventario')
-    .select('*, producto:productos(id, nombre, categoria)')
-    .order('updated_at', { ascending: false })
-
-  const inventarioList = (inventario ?? []) as InventarioConProducto[]
+  const inventarioList = inventario.map((i) => ({
+    ...i,
+    updated_at: i.updated_at.toISOString(),
+  })) as unknown as InventarioConProducto[]
 
   return (
     <div className="space-y-4">
@@ -76,9 +63,7 @@ export default async function InventarioChoferPage() {
           </svg>
         </Link>
         <div>
-          <h1 className="font-nunito font-extrabold text-xl text-gray-900">
-            Inventario
-          </h1>
+          <h1 className="font-nunito font-extrabold text-xl text-gray-900">Inventario</h1>
           <p className="font-outfit text-sm text-gray-500">Stock actual de productos</p>
         </div>
       </div>
@@ -94,7 +79,6 @@ export default async function InventarioChoferPage() {
               key={inv.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 px-5 py-4 space-y-3"
             >
-              {/* Nombre del producto */}
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-outfit font-semibold text-base text-gray-900 leading-snug">
@@ -109,7 +93,6 @@ export default async function InventarioChoferPage() {
                 <AlertaStock stock={inv.stock_bodega} minimo={inv.stock_minimo_alerta} />
               </div>
 
-              {/* Stocks */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center">
                   <p className="font-nunito font-extrabold text-2xl text-gray-900">
@@ -131,7 +114,6 @@ export default async function InventarioChoferPage() {
                 </div>
               </div>
 
-              {/* Alerta de mínimo */}
               <p className="font-outfit text-xs text-gray-400">
                 Alerta cuando stock bodega ≤ {inv.stock_minimo_alerta}
               </p>

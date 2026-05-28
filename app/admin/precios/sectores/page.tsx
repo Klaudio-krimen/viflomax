@@ -1,30 +1,36 @@
 import React from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import type { PrecioDetalle } from '@/lib/types'
 import { NuevoPrecioButton } from './NuevoPrecioButton'
 
 export const metadata = { title: 'Precios Sectores — Viflomax Admin' }
 
 function formatCLP(amount: number): string {
-  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount)
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
-function formatDate(d: string): string {
-  return new Date(d).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+function formatDate(d: Date): string {
+  return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export default async function PreciosSectoresPage() {
-  const supabase = await createClient()
+  const precios = await db.precioDetalle.findMany({
+    orderBy: { vigente_desde: 'desc' },
+  })
 
-  const { data: precios } = await supabase
-    .from('precios_detalle')
-    .select('*')
-    .order('vigente_desde', { ascending: false })
+  const preciosList = precios.map((p) => ({
+    ...p,
+    precio: Number(p.precio),
+    vigente_desde: p.vigente_desde.toISOString(),
+    vigente_hasta: p.vigente_hasta?.toISOString() ?? null,
+    created_at: p.created_at.toISOString(),
+  })) as unknown as PrecioDetalle[]
 
-  const preciosList = (precios ?? []) as PrecioDetalle[]
-
-  // Group by sector
   const sectoresSet = new Set(preciosList.map((p) => p.sector ?? 'General'))
   const sectores = Array.from(sectoresSet).sort()
 
@@ -32,7 +38,10 @@ export default async function PreciosSectoresPage() {
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/precios" className="text-sm font-outfit text-gray-400 hover:text-gray-600 transition-colors">
+          <Link
+            href="/admin/precios"
+            className="text-sm font-outfit text-gray-400 hover:text-gray-600 transition-colors"
+          >
             ← Precios
           </Link>
           <h2 className="font-nunito text-2xl font-extrabold text-gray-900">Precios por Sector</h2>
@@ -49,7 +58,10 @@ export default async function PreciosSectoresPage() {
           {sectores.map((sector) => {
             const preciosSector = preciosList.filter((p) => (p.sector ?? 'General') === sector)
             return (
-              <div key={sector} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div
+                key={sector}
+                className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+              >
                 <div className="px-6 py-4 border-b border-gray-100">
                   <h3 className="font-nunito font-semibold text-gray-900">Sector: {sector}</h3>
                 </div>
@@ -57,23 +69,41 @@ export default async function PreciosSectoresPage() {
                   <table className="w-full text-sm font-outfit">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Producto ID</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Cant. Mín</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Cant. Máx</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Precio</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Vigencia</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Producto ID
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Cant. Mín
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Cant. Máx
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Precio
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                          Vigencia
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {preciosSector.map((precio) => (
                         <tr key={precio.id} className="hover:bg-blue-50 transition-colors">
-                          <td className="px-4 py-2 text-gray-500 text-xs font-mono">{precio.producto_id}</td>
+                          <td className="px-4 py-2 text-gray-500 text-xs font-mono">
+                            {precio.producto_id}
+                          </td>
                           <td className="px-4 py-2 text-gray-700">{precio.cantidad_minima}</td>
-                          <td className="px-4 py-2 text-gray-500">{precio.cantidad_maxima ?? 'Sin límite'}</td>
-                          <td className="px-4 py-2 font-semibold text-gray-900">{formatCLP(precio.precio)}</td>
+                          <td className="px-4 py-2 text-gray-500">
+                            {precio.cantidad_maxima ?? 'Sin límite'}
+                          </td>
+                          <td className="px-4 py-2 font-semibold text-gray-900">
+                            {formatCLP(precio.precio)}
+                          </td>
                           <td className="px-4 py-2 text-gray-500 text-xs">
-                            {formatDate(precio.vigente_desde)}
-                            {precio.vigente_hasta ? ` → ${formatDate(precio.vigente_hasta)}` : ' (sin vencimiento)'}
+                            {formatDate(new Date(precio.vigente_desde))}
+                            {precio.vigente_hasta
+                              ? ` → ${formatDate(new Date(precio.vigente_hasta))}`
+                              : ' (sin vencimiento)'}
                           </td>
                         </tr>
                       ))}

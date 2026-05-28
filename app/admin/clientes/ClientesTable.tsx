@@ -15,7 +15,7 @@ const TIPO_BADGE: Record<string, { variant: 'success' | 'info' | 'default'; labe
   nuevo: { variant: 'default', label: 'Nuevo' },
 }
 
-const TIPOS = [
+const TIPOS: { value: 'nuevo' | 'detalle' | 'mayorista'; label: string }[] = [
   { value: 'nuevo', label: 'Nuevo' },
   { value: 'detalle', label: 'Detalle' },
   { value: 'mayorista', label: 'Mayorista' },

@@ -2,45 +2,26 @@ import { ImageResponse } from 'next/og'
 
 export const size = { width: 180, height: 180 }
 export const contentType = 'image/png'
+export const runtime = 'edge'
 
-export default function AppleIcon() {
+export default async function AppleIcon() {
+  // logo.png debe estar en /public/logo.png
+  const logoUrl = `${process.env.NEXTAUTH_URL ?? 'https://viflomax.vercel.app'}/logo.png`
+
   return new ImageResponse(
     <div
       style={{
-        background: 'linear-gradient(135deg, #4db8e8 0%, #1a6ba0 100%)',
+        background: '#ffffff',
         width: '100%',
         height: '100%',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '40px',
+        padding: '10px',
       }}
     >
-      <div
-        style={{
-          color: 'white',
-          fontSize: 100,
-          fontWeight: 900,
-          fontFamily: 'sans-serif',
-          letterSpacing: '-4px',
-          lineHeight: 1,
-        }}
-      >
-        V
-      </div>
-      <div
-        style={{
-          color: 'rgba(255,255,255,0.75)',
-          fontSize: 22,
-          fontWeight: 600,
-          fontFamily: 'sans-serif',
-          letterSpacing: '2px',
-          marginTop: '-4px',
-        }}
-      >
-        AGUA
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={logoUrl} width={160} height={160} style={{ objectFit: 'contain' }} alt="Viflomax" />
     </div>,
     { ...size }
   )

@@ -2,31 +2,24 @@ import { ImageResponse } from 'next/og'
 
 export const size = { width: 32, height: 32 }
 export const contentType = 'image/png'
+export const runtime = 'edge'
 
-export default function Icon() {
+export default async function Icon() {
+  const logoUrl = `${process.env.NEXTAUTH_URL ?? 'https://viflomax.vercel.app'}/logo.png`
+
   return new ImageResponse(
     <div
       style={{
-        background: 'linear-gradient(135deg, #4db8e8 0%, #1a6ba0 100%)',
+        background: '#ffffff',
         width: '100%',
         height: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '6px',
       }}
     >
-      <div
-        style={{
-          color: 'white',
-          fontSize: 20,
-          fontWeight: 900,
-          fontFamily: 'sans-serif',
-          letterSpacing: '-1px',
-        }}
-      >
-        V
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={logoUrl} width={32} height={32} style={{ objectFit: 'contain' }} alt="" />
     </div>,
     { ...size }
   )

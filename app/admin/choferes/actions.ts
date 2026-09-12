@@ -44,6 +44,7 @@ export async function crearChofer(formData: FormData): Promise<ActionResult> {
           name: nombre,
           password: hashedPassword,
           role: 'chofer',
+          mustChangePassword: true,
         },
       })
 
@@ -116,7 +117,7 @@ export async function resetPasswordChofer(
     const hashedPassword = await bcrypt.hash(password, 12)
     await db.user.update({
       where: { id: chofer.user_id },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword, mustChangePassword: true },
     })
   } catch {
     return { error: 'Error actualizando la contraseña' }

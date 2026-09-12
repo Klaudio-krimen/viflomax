@@ -10,6 +10,19 @@ export async function updateSession(request: NextRequest) {
   const rol = token?.role as string | undefined
   const { pathname } = request.nextUrl
 
+  // Cambio de contraseña forzado (admin-generada) — corta el paso a cualquier
+  // ruta que no sea el propio flujo de cambio, el login, o la API de sesión
+  if (
+    token?.mustChangePassword === true &&
+    pathname !== '/cambiar-password' &&
+    pathname !== '/login' &&
+    !pathname.startsWith('/api')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/cambiar-password'
+    return NextResponse.redirect(url)
+  }
+
   // Proteger rutas /admin/* — 'admin' tiene acceso completo; 'visor' solo
   // puede ver el listado y detalle de pedidos (nunca /admin/pedidos/nuevo)
   if (pathname.startsWith('/admin')) {

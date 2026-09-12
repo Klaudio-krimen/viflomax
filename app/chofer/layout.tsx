@@ -41,6 +41,27 @@ export default async function ChoferLayout({ children }: { children: React.React
             <span className="text-sm font-outfit text-gray-600 hidden sm:block truncate max-w-[120px]">
               {nombreChofer}
             </span>
+            <Link
+              href="/cambiar-password"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-outfit text-gray-700 hover:bg-gray-100 transition-colors min-h-[44px]"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 11-12 0 6 6 0 0112 0zM3 21l4.5-4.5"
+                />
+              </svg>
+              <span className="hidden sm:inline">Contraseña</span>
+            </Link>
             <CerrarSesionBtn />
           </div>
         </div>

@@ -7,6 +7,7 @@ declare module 'next-auth' {
       role: string
       // Solo se define para role === 'chofer'; refleja Chofer.activo en tiempo real
       choferActivo?: boolean
+      mustChangePassword: boolean
     } & DefaultSession['user']
   }
 }
@@ -17,5 +18,6 @@ declare module 'next-auth/jwt' {
     role: string
     // Solo se define para role === 'chofer'; refleja Chofer.activo en tiempo real
     choferActivo?: boolean
+    mustChangePassword: boolean
   }
 }

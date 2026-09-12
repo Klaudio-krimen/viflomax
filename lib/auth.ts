@@ -64,6 +64,14 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
       }
 
+      if (token.id) {
+        const usuario = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { mustChangePassword: true },
+        })
+        token.mustChangePassword = usuario?.mustChangePassword ?? false
+      }
+
       // Re-verificar en cada request si un chofer con sesión ya abierta fue
       // desactivado mientras tanto — así una desvinculación corta el acceso
       // de inmediato, no solo bloquea logins nuevos.
@@ -83,6 +91,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.mustChangePassword = token.mustChangePassword as boolean
         if (token.role === 'chofer') {
           session.user.choferActivo = token.choferActivo as boolean
         }

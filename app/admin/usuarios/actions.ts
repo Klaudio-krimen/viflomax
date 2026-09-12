@@ -38,6 +38,7 @@ export async function crearUsuarioVisor(formData: FormData): Promise<ActionResul
         name: nombre,
         password: hashedPassword,
         role: 'visor',
+        mustChangePassword: true,
       },
     })
   } catch {

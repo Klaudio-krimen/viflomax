@@ -57,6 +57,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?   // hasheado con bcryptjs
+  mustChangePassword Boolean @default(false) // fuerza el flujo /cambiar-password en el próximo login
   role          String    @default("publico") // 'admin' | 'chofer' | 'publico' | 'visor' (solo-lectura de pedidos)
   createdAt     DateTime  @default(now())
   accounts      Account[]

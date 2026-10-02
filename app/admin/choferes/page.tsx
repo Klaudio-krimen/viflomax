@@ -9,7 +9,10 @@ export const metadata = { title: 'Choferes — Viflomax Admin' }
 export default async function ChoferesPage() {
   const choferes = await db.chofer.findMany({
     orderBy: [{ activo: 'desc' }, { nombre: 'asc' }],
-    include: { _count: { select: { entregas: true, turnos: true } } },
+    include: {
+      _count: { select: { entregas: true, turnos: true } },
+      user: { select: { email: true } },
+    },
   })
 
   const choferesConHistorial = choferes.map((c) => ({
@@ -17,6 +20,7 @@ export default async function ChoferesPage() {
     tieneHistorial: c._count.entregas > 0 || c._count.turnos > 0,
     entregasCount: c._count.entregas,
     turnosCount: c._count.turnos,
+    email: c.user?.email ?? null,
   }))
 
   return (
@@ -26,6 +30,7 @@ export default async function ChoferesPage() {
           tieneHistorial: boolean
           entregasCount: number
           turnosCount: number
+          email: string | null
         })[]
       }
     />

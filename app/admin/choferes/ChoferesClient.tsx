@@ -335,7 +335,7 @@ function EditarChoferModal({
   chofer,
   onSuccess,
 }: {
-  chofer: Chofer
+  chofer: Chofer & { email: string | null }
   onSuccess: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -397,6 +397,13 @@ function EditarChoferModal({
             defaultValue={chofer.nombre}
           />
           <Input
+            label="Email (cuenta de acceso)"
+            value={chofer.email ?? 'Sin cuenta de acceso vinculada'}
+            readOnly
+            disabled
+            helperText="Es el correo con el que inicia sesión. No se puede cambiar desde aquí."
+          />
+          <Input
             label="Teléfono"
             name="telefono"
             type="tel"
@@ -444,6 +451,7 @@ type ChoferConHistorial = Chofer & {
   tieneHistorial: boolean
   entregasCount: number
   turnosCount: number
+  email: string | null
 }
 
 function EliminarChoferButton({

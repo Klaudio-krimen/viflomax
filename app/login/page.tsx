@@ -1,25 +1,44 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { PasswordInput } from '@/components/ui/PasswordInput'
+
+const CORREO_RECORDADO_KEY = 'viflomax_correo_recordado'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [recordarCorreo, setRecordarCorreo] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Precargar el correo recordado. Nunca se guarda la contraseña: de eso se
+  // encarga el gestor del propio teléfono, que la cifra con el sistema.
+  useEffect(() => {
+    try {
+      const guardado = localStorage.getItem(CORREO_RECORDADO_KEY)
+      if (guardado) {
+        setEmail(guardado)
+        setRecordarCorreo(true)
+      }
+    } catch {
+      // Modo privado o almacenamiento bloqueado: seguir sin precargar.
+    }
+  }, [])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
+    const correoNormalizado = email.trim().toLowerCase()
+
     try {
       const result = await signIn('credentials', {
-        email: email.trim().toLowerCase(),
+        email: correoNormalizado,
         password,
         redirect: false,
       })
@@ -27,6 +46,13 @@ export default function LoginPage() {
       if (result?.error) {
         setError('Credenciales incorrectas. Verifica tu email y contraseña.')
         return
+      }
+
+      try {
+        if (recordarCorreo) localStorage.setItem(CORREO_RECORDADO_KEY, correoNormalizado)
+        else localStorage.removeItem(CORREO_RECORDADO_KEY)
+      } catch {
+        // El login ya fue exitoso: no dejar que el almacenamiento lo rompa.
       }
 
       // Leer el rol desde la sesión para redirigir correctamente
@@ -76,9 +102,11 @@ export default function LoginPage() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               required
-              autoComplete="email"
+              autoComplete="username"
+              inputMode="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="usuario@viflomax.cl"
@@ -89,6 +117,7 @@ export default function LoginPage() {
           {/* Password */}
           <PasswordInput
             id="password"
+            name="password"
             label="Contraseña"
             required
             autoComplete="current-password"
@@ -96,6 +125,22 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
           />
+
+          {/* Recordar correo — 44px de alto para uso en terreno */}
+          <label
+            htmlFor="recordar-correo"
+            className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none"
+          >
+            <input
+              id="recordar-correo"
+              name="recordar-correo"
+              type="checkbox"
+              checked={recordarCorreo}
+              onChange={(e) => setRecordarCorreo(e.target.checked)}
+              className="h-5 w-5 rounded border-gray-300 text-viflomax-verde-700 focus:ring-2 focus:ring-viflomax-azul"
+            />
+            <span className="text-sm text-gray-700">Recordar mi correo en este dispositivo</span>
+          </label>
 
           {/* Submit */}
           <button

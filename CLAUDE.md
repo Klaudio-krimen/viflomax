@@ -116,6 +116,14 @@ Leer el archivo que corresponda antes de editar esa área:
 | `.claude/rules/landing-publica.md` | `components/public/**`, `lib/landing/**`, `app/(public)/**` |
 | `.claude/rules/contratos-congelados.md` | `app/api/pedidos/publico/**`, `lib/productos.ts`, `lib/contacto.ts` |
 
+## Trabajo coordinado con Codex
+
+Este repo se trabaja en conjunto con Codex (que lee `AGENTS.md`). El contrato entre agentes es
+`.agents/PROTOCOLO.md`: una tarea por archivo en `.agents/tareas/`, candado por `archivos:`, rama
+`claude/VFX-NNN-slug`, revisión cruzada obligatoria y decisiones en `.agents/decisiones/`. Tablero:
+`node scripts/agentes-tablero.mjs`. Rol de Claude: arquitecto, revisor y autor de las tareas
+transversales; al delegar a Codex, la tarea debe quedar `lista` con criterios verificables.
+
 ## Innegociable
 
 1. **`app/api/pedidos/publico/route.ts` no se edita.** Su contrato está congelado; si el cliente no

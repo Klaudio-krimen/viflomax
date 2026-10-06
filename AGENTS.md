@@ -16,6 +16,20 @@ Prisma 5 · PostgreSQL. Gestor de paquetes: **npm**. Sin `src/`; el alias `@/` a
 
 **Compuerta:** `npm run lint && npx jest && npm run build` pasa antes de marcar algo como hecho.
 
+## Trabajo coordinado con Claude Code
+
+Este repo lo trabajan Codex y Claude Code. **Antes de editar código, leer
+`.agents/PROTOCOLO.md`.** Resumen para Codex:
+
+1. `node scripts/agentes-tablero.mjs` muestra el tablero. Tomar una tarea `lista` cuyo campo
+   `archivos:` no choque con otra `en-curso`.
+2. Marcarla `en-curso` con `asignado: codex`, trabajar en la rama `codex/VFX-NNN-slug` (idealmente
+   en su propio `git worktree`) y no editar archivos fuera de `archivos:` sin anotarlo.
+3. Al terminar: compuerta en verde, entrada en `## Bitácora`, estado `en-revision`,
+   `revisor: claude`. Claude no ve tu sesión: todo lo que deba saber va en el archivo de la tarea.
+4. Si te toca revisar trabajo de Claude, escribe en `## Revisión` con `CAMBIOS` o `APROBADA`.
+5. Nunca push, merge a `main`, ni `prisma migrate` contra la base real: eso lo hace el humano.
+
 ## Innegociable
 
 1. `app/api/pedidos/publico/route.ts` no se edita: su contrato está congelado.

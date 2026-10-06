@@ -23,6 +23,8 @@ evita conflictos de merge entre agentes.
 
 - **ID:** `VFX-` + número correlativo de 3 dígitos. El siguiente número es el mayor existente + 1.
 - **Frontmatter** = estado legible por máquina. **Cuerpo** = contexto, criterios y bitácora.
+- `asignado: humano` marca lo que solo puede hacer Claudio (configurar Vercel, decidir sobre una regla innegociable, dar un dato).
+- Las auditorías van a `.agents/auditorias/AAAA-MM-DD-tema.md` y cada hallazgo accionable se vuelve una tarea.
 - Ver el tablero completo: `node scripts/agentes-tablero.mjs`.
 
 Las épicas grandes siguen usando `blueprints/<nombre>/` (blueprint + `tasks.json`). En ese caso,

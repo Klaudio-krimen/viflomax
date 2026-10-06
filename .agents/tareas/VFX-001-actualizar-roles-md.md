@@ -1,6 +1,6 @@
 ---
 id: VFX-001
-titulo: Reescribir ROLES.md para que describa NextAuth + Prisma en vez de Supabase
+titulo: Reescribir ROLES.md y .env.example para que describan NextAuth + Prisma en vez de Supabase
 estado: lista
 prioridad: p2
 asignado:
@@ -9,7 +9,7 @@ area: docs
 depende_de: []
 blueprint:
 rama:
-archivos: [ROLES.md]
+archivos: [ROLES.md, .env.example]
 bloqueo:
 creado: 2026-10-05
 actualizado: 2026-10-05
@@ -31,6 +31,9 @@ sistema que no existe.
       `prisma/schema.prisma` y la protección de rutas tal como la hace `lib/auth/middleware.ts`.
 - [ ] CUANDO se lee la sección de alta de usuarios EL SISTEMA DEBERÁ describir el flujo real
       (`crearChofer`, `crearUsuarioVisor`, `mustChangePassword`, `/cambiar-password`).
+- [ ] CUANDO se lee `.env.example` EL SISTEMA DEBERÁ listar las variables de la tabla *Entorno*
+      de `CLAUDE.md` (`DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `CLOUDINARY_*`,
+      `NEXT_PUBLIC_WHATSAPP_NUMBER`) con valores ficticios y sin variables `SUPABASE_*`.
 - [ ] `npm run lint && npx jest && npm run build` sale con código 0.
 
 ## Fuera de alcance

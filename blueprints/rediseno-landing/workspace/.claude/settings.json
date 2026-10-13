@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm run dev:*)",
+      "Bash(npm test:*)",
+      "Bash(npm ci)",
+      "Bash(npx jest:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npx next build:*)",
+      "Bash(npx next start:*)",
+      "Bash(npx prisma generate)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(test:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(curl:*)",
+      "Bash(cp:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(sleep:*)",
+      "Bash(kill:*)",
+      "Bash(rm -f:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git tag:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git rev-parse:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx prisma db push:*)"
+    ]
+  }
+}

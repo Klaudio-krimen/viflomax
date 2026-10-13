@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=720, height=1280" />
+    <title>Ola cristalina 9:16</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 720px; height: 1280px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 720px; height: 1280px; overflow: hidden; background: #000; }
+      .clip { position: absolute; inset: 0; }
+      #scene { display: block; width: 720px; height: 1280px; }
+    </style>
+  </head>
+  <body>
+    <!-- Corte móvil: la ola cae de arriba hacia abajo con una leve diagonal. -->
+    <div
+      id="root"
+      data-composition-id="ola-9x16"
+      data-start="0"
+      data-duration="2.4"
+      data-fps="30"
+      data-width="720"
+      data-height="1280"
+      data-no-timeline
+      data-ola-ox="0.86"
+      data-ola-oy="0.95"
+      data-ola-dx="-0.42"
+      data-ola-dy="-1"
+    >
+      <canvas id="scene" class="clip" data-start="0" data-duration="2.4" data-track-index="0" data-no-timeline></canvas>
+    </div>
+    <script src="./ola.js"></script>
+  </body>
+</html>

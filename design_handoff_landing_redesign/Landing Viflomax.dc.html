@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/organic-8bca922b-fb6e-4bf2-9bf8-d307ecfe10fd/styles.css">
+  <script src="_ds/organic-8bca922b-fb6e-4bf2-9bf8-d307ecfe10fd/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-surface: #ffffff;
+      --color-accent: #2f9fd6;
+      --color-accent-100: #eaf6fc;
+      --color-accent-200: #cdeaf7;
+      --color-accent-300: #a3d9f0;
+      --color-accent-400: #6dc2e3;
+      --color-accent-500: #2f9fd6;
+      --color-accent-600: #2380ac;
+      --color-accent-700: #1a628a;
+      --color-accent-800: #164a63;
+      --color-accent-900: #0d2f40;
+      --color-accent-2: #6ab04c;
+      --color-accent-2-100: #eef9e6;
+      --color-accent-2-200: #d9f0c7;
+      --color-accent-2-300: #bce39c;
+      --color-accent-2-400: #97cf6c;
+      --color-accent-2-500: #6ab04c;
+      --color-accent-2-600: #549140;
+      --color-accent-2-700: #3f6f31;
+      --color-accent-2-800: #2c4f23;
+      --color-accent-2-900: #1c3216;
+    }
+    body { margin: 0; background: var(--color-bg); }
+    a { color: var(--color-accent-700); }
+    a:hover { color: var(--color-accent-900); }
+    .icon-circle { width: 64px; height: 64px; border-radius: 999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    @keyframes waterfall { 0% { transform: translateY(-10%); opacity: 0; } 10% { opacity: var(--drop-op, 0.4); } 90% { opacity: var(--drop-op, 0.4); } 100% { transform: translateY(110vh); opacity: 0; } }
+    .water-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .water-drop { position: absolute; top: 0; width: 10px; height: 14px; border-radius: 50% 50% 50% 0; transform: rotate(45deg); animation: waterfall linear infinite; }
+  </style>
+</helmet>
+
+<div style="font-family: var(--font-body); color: var(--color-text); overflow-x: hidden;">
+
+  <nav class="nav" style="position: sticky; top: 0; z-index: 30; background: #ffffffee; backdrop-filter: blur(6px);">
+    <a href="#inicio" class="nav-brand" style="display: flex; align-items: center; gap: 10px;">
+      <img src="assets/logo.png" alt="Agua Viflomax" style="height: 42px; width: auto;"/>
+    </a>
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <a href="#productos" style="font-weight: 600; text-decoration: none; color: var(--color-accent-800);">Productos</a>
+      <a href="#cobertura" style="font-weight: 600; text-decoration: none; color: var(--color-accent-800);">Cobertura</a>
+      <a href="#pedido" class="btn btn-primary">Pedir ahora</a>
+    </div>
+  </nav>
+
+  <section id="inicio" style="position: relative; padding: 100px 32px 110px; overflow: hidden; background: linear-gradient(135deg, var(--color-accent-800) 0%, var(--color-accent-500) 55%, var(--color-accent-2-500) 100%); color: white;">
+    <div style="position: absolute; top: -40px; left: -60px; width: 260px; height: 260px; border-radius: 999px; background: rgba(255,255,255,0.08);"></div>
+    <div style="position: absolute; bottom: -80px; right: 10%; width: 340px; height: 340px; border-radius: 999px; background: rgba(255,255,255,0.06);"></div>
+    <div style="position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 0.8fr; align-items: center; gap: 40px;">
+      <div>
+        <span class="tag" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 20px; display: inline-block;">Maipú y Padre Hurtado</span>
+        <h1 style="font-family: var(--font-heading); font-size: 58px; line-height: 1.05; margin: 0 0 20px; color: white;">Agua purificada a domicilio</h1>
+        <p style="font-size: 20px; line-height: 1.5; color: rgba(255,255,255,0.92); margin: 0 0 32px; max-width: 480px;">Recargas, bidones y dispensadores. Pide hoy y te lo dejamos en la puerta el mismo día.</p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+          <a href="#pedido" class="btn" style="font-size: 17px; padding: 14px 28px; background: white; color: var(--color-accent-800);">Hacer mi pedido</a>
+          <a href="#productos" class="btn" style="font-size: 17px; padding: 14px 28px; border: 2px solid white; color: white; background: transparent;">Ver productos</a>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center;">
+        <img src="assets/logo.png" alt="" style="width: 100%; max-width: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.25)); animation: float 5s ease-in-out infinite;"/>
+      </div>
+    </div>
+  </section>
+
+  <section id="productos" style="position: relative; padding: 72px 32px; overflow: hidden;">
+    <div class="water-bg">
+      <sc-for list="{{waterDrops}}" as="d" hint-placeholder-count="18">
+        <span class="water-drop" style="{{ d.style }}"></span>
+      </sc-for>
+    </div>
+    <div style="position: relative; z-index: 1; max-width: 1100px; margin: 0 auto;">
+    <h2 style="font-family: var(--font-heading); font-size: 36px; margin: 0 0 8px; color: var(--color-accent-800);">Nuestros productos</h2>
+    <p style="color: var(--color-neutral-700); font-size: 17px; margin: 0 0 32px;">Precio final en Maipú y Padre Hurtado. Otras comunas se confirman al pedir.</p>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px;">
+      <sc-for list="{{categoriasConHandler}}" as="cat" hint-placeholder-count="4">
+        <button type="button" class="{{ cat.btnClass }}" onClick="{{ cat.onClick }}" style="border-radius: 999px;">{{ cat.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;">
+      <sc-for list="{{productosVisibles}}" as="p" hint-placeholder-count="6">
+        <div class="card elev-sm" style="{{ p.borderStyle }} display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+          <div style="width: 100%; aspect-ratio: 1; position: relative;">
+            <image-slot id="{{ p.imgId }}" shape="rect" placeholder="{{ p.imgPlaceholder }}"></image-slot>
+          </div>
+          <div style="padding: var(--space-3); display: flex; flex-direction: column; flex: 1;">
+          <sc-if value="{{ p.badge }}" hint-placeholder-val="{{ false }}">
+            <span class="tag tag-accent-2" style="align-self: flex-start; margin-bottom: 12px;">{{ p.badge }}</span>
+          </sc-if>
+          <div class="card-title" style="color: var(--color-accent-800);">{{ p.nombre }}</div>
+          <div class="card-body" style="flex: 1;">{{ p.descripcion }}</div>
+          <div class="card-meta" style="font-family: var(--font-heading); font-size: 24px; color: var(--color-accent-2-700); margin: 8px 0 16px;">{{ p.precioFmt }}</div>
+          <button type="button" class="btn btn-primary btn-block" onClick="{{ p.onPedir }}">Pedir este</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    </div>
+  </section>
+
+  <section style="padding: 72px 32px; background: var(--color-accent-100);">
+    <div style="max-width: 1100px; margin: 0 auto;">
+      <h2 style="font-family: var(--font-heading); font-size: 36px; margin: 0 0 40px; color: var(--color-accent-800);">¿Por qué elegirnos?</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px;">
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+          <span class="icon-circle" style="background: var(--color-accent-500);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7Z"/></svg>
+          </span>
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 20px; margin: 4px 0 8px; color: var(--color-accent-800);">100% purificada</h3>
+            <p style="color: var(--color-neutral-700); margin: 0; line-height: 1.5;">Proceso certificado que garantiza agua limpia y segura para toda la familia.</p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+          <span class="icon-circle" style="background: var(--color-accent-2-500);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+          </span>
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 20px; margin: 4px 0 8px; color: var(--color-accent-800);">Entrega el mismo día</h3>
+            <p style="color: var(--color-neutral-700); margin: 0; line-height: 1.5;">Pedidos antes del mediodía llegan el mismo día en Maipú y Padre Hurtado.</p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+          <span class="icon-circle" style="background: var(--color-accent-500);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42Z"/><circle cx="7.5" cy="7.5" r=".5" fill="white"/></svg>
+          </span>
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 20px; margin: 4px 0 8px; color: var(--color-accent-800);">Precio justo</h3>
+            <p style="color: var(--color-neutral-700); margin: 0; line-height: 1.5;">Tarifas transparentes, sin sorpresas. Descuentos para pedidos recurrentes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cobertura" style="position: relative; padding: 72px 32px; overflow: hidden;">
+    <div class="water-bg">
+      <sc-for list="{{waterDropsCobertura}}" as="d" hint-placeholder-count="18">
+        <span class="water-drop" style="{{ d.style }}"></span>
+      </sc-for>
+    </div>
+    <div style="position: relative; z-index: 1; max-width: 1100px; margin: 0 auto;">
+    <h2 style="font-family: var(--font-heading); font-size: 36px; margin: 0 0 12px; color: var(--color-accent-800);">Zona de cobertura</h2>
+    <p style="color: var(--color-neutral-700); font-size: 17px; margin: 0 0 32px; max-width: 560px;">Entregamos con ruta fija en estas comunas. ¿Estás en otra zona? Escríbenos y confirmamos.</p>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 10px; background: var(--color-accent-2-500); color: white; padding: 14px 24px; border-radius: 999px; font-weight: 600; font-size: 17px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+        Maipú
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; background: var(--color-accent-500); color: white; padding: 14px 24px; border-radius: 999px; font-weight: 600; font-size: 17px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+        Padre Hurtado
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <section id="pedido" style="padding: 72px 32px; background: linear-gradient(160deg, var(--color-accent-2-100) 0%, var(--color-accent-100) 100%);">
+    <div style="max-width: 640px; margin: 0 auto;">
+      <h2 style="font-family: var(--font-heading); font-size: 36px; margin: 0 0 8px; color: var(--color-accent-800);">Haz tu pedido</h2>
+      <p style="color: var(--color-neutral-700); font-size: 17px; margin: 0 0 32px;">Completa el formulario y lo enviamos por WhatsApp para confirmar.</p>
+
+      <form onSubmit="{{ onSubmit }}" style="display: flex; flex-direction: column; gap: 20px; background: white; padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div class="field">
+          <label for="v-nombre">Nombre</label>
+          <input id="v-nombre" class="input" type="text" required="{{ true }}" value="{{ nombre }}" onChange="{{ onChangeNombre }}" placeholder="Tu nombre"/>
+        </div>
+        <div class="field">
+          <label for="v-telefono">Teléfono</label>
+          <input id="v-telefono" class="input" type="tel" required="{{ true }}" value="{{ telefono }}" onChange="{{ onChangeTelefono }}" placeholder="+56 9 ..."/>
+        </div>
+        <div class="field">
+          <label for="v-direccion">Dirección</label>
+          <input id="v-direccion" class="input" type="text" required="{{ true }}" value="{{ direccion }}" onChange="{{ onChangeDireccion }}" placeholder="Calle, número, comuna"/>
+        </div>
+        <div class="field">
+          <label for="v-producto">Producto</label>
+          <select id="v-producto" class="input" value="{{ producto }}" onChange="{{ onChangeProducto }}">
+            <sc-for list="{{productosOpciones}}" as="op" hint-placeholder-count="9">
+              <option value="{{ op.nombre }}">{{ op.label }}</option>
+            </sc-for>
+          </select>
+        </div>
+        <div class="field">
+          <label for="v-cantidad">Cantidad</label>
+          <input id="v-cantidad" class="input" type="number" min="1" value="{{ cantidad }}" onChange="{{ onChangeCantidad }}"/>
+        </div>
+        <div class="field">
+          <label for="v-notas">Notas (opcional)</label>
+          <input id="v-notas" class="input" type="text" value="{{ notas }}" onChange="{{ onChangeNotas }}" placeholder="Referencia, horario, etc."/>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" style="font-size: 17px; padding: 14px; background: linear-gradient(120deg, var(--color-accent-600), var(--color-accent-2-600));">Enviar pedido por WhatsApp</button>
+      </form>
+    </div>
+  </section>
+
+  <a href="{{ whatsappHref }}" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp" style="position: fixed; bottom: 24px; right: 24px; z-index: 40; background: #25D366; border-radius: 999px; padding: 16px; box-shadow: var(--shadow-lg); display: flex;">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="white" aria-hidden="true"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.822.736 5.47 2.027 7.773L0 32l8.437-2.008A15.93 15.93 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.277 13.277 0 01-6.771-1.854l-.486-.288-5.01 1.193 1.215-4.875-.317-.5A13.267 13.267 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.874c-.398-.199-2.353-1.161-2.718-1.294-.364-.132-.63-.199-.896.2-.265.399-1.028 1.294-1.26 1.56-.232.265-.464.299-.862.1-.398-.2-1.68-.619-3.2-1.975-1.183-1.055-1.981-2.358-2.214-2.756-.233-.399-.025-.614.175-.812.18-.179.398-.465.597-.698.2-.233.265-.399.399-.665.133-.266.066-.498-.033-.698-.1-.199-.896-2.16-1.228-2.957-.322-.778-.65-.672-.896-.684l-.763-.013c-.265 0-.697.1-1.062.499-.364.398-1.393 1.362-1.393 3.32s1.427 3.853 1.626 4.119c.199.265 2.808 4.287 6.803 6.014.951.41 1.693.655 2.272.838.955.304 1.823.261 2.51.158.765-.114 2.353-.962 2.685-1.89.333-.928.333-1.724.233-1.89-.1-.166-.365-.265-.763-.465z"/></svg>
+  </a>
+
+  <footer style="background: var(--color-accent-900); color: white; padding: 48px 32px;">
+    <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 32px;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <img src="assets/logo.png" alt="Agua Viflomax" style="height: 56px; width: auto;"/>
+        <div>
+          <p style="opacity: 0.9; margin: 4px 0;">Maipú y Padre Hurtado, Región Metropolitana</p>
+          <p style="opacity: 0.9; margin: 4px 0;">+56 9 9099 4633</p>
+          <p style="opacity: 0.9; margin: 4px 0;">Lunes a viernes, 09:00 a 19:00 hrs</p>
+        </div>
+      </div>
+      <div style="opacity: 0.7; font-size: 14px; align-self: flex-end;">
+        <p style="margin: 0;">© 2026 Agua Viflomax</p>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const CATEGORIAS = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'agua', label: 'Agua y recargas' },
+  { id: 'dispensadores', label: 'Dispensadores' },
+  { id: 'extras', label: 'Extras' },
+];
+
+const PRODUCTOS = [
+  { nombre: 'Recarga 20 Litros', precio: 2500, categoria: 'agua', descripcion: 'Rellenamos tu bidón. La opción más económica si ya tienes envase.', badge: 'El más pedido', imagen: 'recarga-20l' },
+  { nombre: 'Envase 20 Litros', precio: 5500, categoria: 'agua', descripcion: 'Bidón nuevo con agua purificada. Incluye el envase.', imagen: 'envase-20l' },
+  { nombre: 'Envase 10 Litros', precio: 3500, categoria: 'agua', descripcion: 'Formato más liviano, ideal para espacios chicos.', imagen: 'envase-10l' },
+  { nombre: 'Recarga 10 Litros', precio: 1800, categoria: 'agua', descripcion: 'Rellenado de tu bidón de 10 litros.', imagen: 'recarga-10l' },
+  { nombre: 'Dispensador Bomba USB', precio: 25000, categoria: 'dispensadores', descripcion: 'Bomba eléctrica recargable por USB. Se monta sobre el bidón.', badge: 'Sin esfuerzo', imagen: 'dispensador-bomba-usb' },
+  { nombre: 'Dispensador USB Sobremesa', precio: 20000, categoria: 'dispensadores', descripcion: 'Base de sobremesa con bomba USB integrada.', imagen: 'dispensador-usb-sobremesa' },
+  { nombre: 'Dispensador Básico Sobremesa', precio: 15000, categoria: 'dispensadores', descripcion: 'Dispensador manual de sobremesa. Simple y resistente.', imagen: 'dispensador-basico' },
+  { nombre: 'Hielo Purificado', precio: 2000, categoria: 'extras', descripcion: 'Bolsa de hielo hecho con la misma agua purificada.', imagen: 'hielo' },
+  { nombre: 'Manilla Transportadora', precio: 1500, categoria: 'extras', descripcion: 'Agarre ergonómico para cargar el bidón sin lastimarte las manos.', imagen: 'manilla' },
+];
+
+const WHATSAPP_NUMBER = '56990994633';
+
+const formatCLP = (n) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+
+const makeDrops = (seed, count, colorVar) => {
+  const drops = [];
+  let s = seed;
+  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  for (let i = 0; i < count; i++) {
+    const left = (rand() * 100).toFixed(1);
+    const size = (6 + rand() * 8).toFixed(1);
+    const duration = (4 + rand() * 5).toFixed(1);
+    const delay = (rand() * -9).toFixed(1);
+    const opacity = (0.15 + rand() * 0.25).toFixed(2);
+    drops.push({
+      style: `left:${left}%; width:${size}px; height:${(size * 1.3).toFixed(1)}px; background:${colorVar}; animation-duration:${duration}s; animation-delay:${delay}s; --drop-op:${opacity};`,
+    });
+  }
+  return drops;
+};
+
+const WATER_DROPS_PRODUCTOS = makeDrops(7, 16, 'var(--color-accent-300)');
+const WATER_DROPS_COBERTURA = makeDrops(23, 14, 'var(--color-accent-2-300)');
+
+class Component extends DCLogic {
+  state = {
+    filtro: 'todos',
+    nombre: '',
+    telefono: '',
+    direccion: '',
+    producto: PRODUCTOS[0].nombre,
+    cantidad: 1,
+    notas: '',
+  };
+
+  setFiltro = (id) => this.setState({ filtro: id });
+
+  selectProducto = (nombre) => {
+    this.setState({ producto: nombre });
+    const el = document.getElementById('pedido');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  onChangeNombre = (e) => this.setState({ nombre: e.target.value });
+  onChangeTelefono = (e) => this.setState({ telefono: e.target.value });
+  onChangeDireccion = (e) => this.setState({ direccion: e.target.value });
+  onChangeProducto = (e) => this.setState({ producto: e.target.value });
+  onChangeCantidad = (e) => this.setState({ cantidad: e.target.value });
+  onChangeNotas = (e) => this.setState({ notas: e.target.value });
+
+  onSubmit = (e) => {
+    e.preventDefault();
+    const s = this.state;
+    const msg = [
+      'Hola! Quiero hacer un pedido de Agua Viflomax:',
+      `Producto: ${s.producto} x${s.cantidad}`,
+      `Nombre: ${s.nombre}`,
+      `Teléfono: ${s.telefono}`,
+      `Dirección: ${s.direccion}`,
+      s.notas ? `Notas: ${s.notas}` : null,
+    ].filter(Boolean).join('\n');
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  renderVals() {
+    const { filtro } = this.state;
+    const categoriasConHandler = CATEGORIAS.map((c) => ({
+      id: c.id,
+      label: c.label,
+      btnClass: filtro === c.id ? 'btn btn-primary' : 'btn btn-secondary',
+      onClick: () => this.setFiltro(c.id),
+    }));
+
+    const visibles = filtro === 'todos' ? PRODUCTOS : PRODUCTOS.filter((p) => p.categoria === filtro);
+    const productosVisibles = visibles.map((p) => ({
+      nombre: p.nombre,
+      descripcion: p.descripcion,
+      precioFmt: formatCLP(p.precio),
+      badge: p.badge || null,
+      borderStyle: p.badge ? `border: 2px solid var(--color-accent-2-500);` : '',
+      onPedir: () => this.selectProducto(p.nombre),
+      imgId: `producto-${p.imagen}`,
+      imgPlaceholder: `public/productos/${p.imagen}.jpg`,
+    }));
+
+    const productosOpciones = PRODUCTOS.map((p) => ({ nombre: p.nombre, label: `${p.nombre} — ${formatCLP(p.precio)}` }));
+
+    return {
+      categoriasConHandler,
+      productosVisibles,
+      productosOpciones,
+      nombre: this.state.nombre,
+      telefono: this.state.telefono,
+      direccion: this.state.direccion,
+      producto: this.state.producto,
+      cantidad: this.state.cantidad,
+      notas: this.state.notas,
+      onChangeNombre: this.onChangeNombre,
+      onChangeTelefono: this.onChangeTelefono,
+      onChangeDireccion: this.onChangeDireccion,
+      onChangeProducto: this.onChangeProducto,
+      onChangeCantidad: this.onChangeCantidad,
+      onChangeNotas: this.onChangeNotas,
+      onSubmit: this.onSubmit,
+      waterDrops: WATER_DROPS_PRODUCTOS,
+      waterDropsCobertura: WATER_DROPS_COBERTURA,
+      whatsappHref: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola! Quiero consultar por agua Viflomax.')}`,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

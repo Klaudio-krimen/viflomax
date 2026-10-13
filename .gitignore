@@ -39,3 +39,6 @@ yarn-debug.log*
 yarn-error.log*
 
 /lib/generated/prisma
+
+.vercel
+.env*.local

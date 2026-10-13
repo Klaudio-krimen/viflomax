@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1440, height=810" />
+    <title>Ola cristalina 16:9</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1440px; height: 810px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1440px; height: 810px; overflow: hidden; background: #000; }
+      .clip { position: absolute; inset: 0; }
+      #scene { display: block; width: 1440px; height: 810px; }
+    </style>
+  </head>
+  <body>
+    <!-- Corte desktop: el vaso se vuelca desde arriba a la derecha y la ola barre en diagonal. -->
+    <div
+      id="root"
+      data-composition-id="ola-16x9"
+      data-start="0"
+      data-duration="2.4"
+      data-fps="30"
+      data-width="1440"
+      data-height="810"
+      data-no-timeline
+      data-ola-ox="0.88"
+      data-ola-oy="0.84"
+      data-ola-dx="-1"
+      data-ola-dy="-0.52"
+    >
+      <canvas id="scene" class="clip" data-start="0" data-duration="2.4" data-track-index="0" data-no-timeline></canvas>
+    </div>
+    <script src="./ola.js"></script>
+  </body>
+</html>

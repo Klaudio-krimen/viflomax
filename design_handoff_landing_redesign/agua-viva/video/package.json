@@ -1,0 +1,14 @@
+{
+  "name": "viflomax-ola-cristalina",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "preview:16x9": "cp ola.js 16x9/ && cd 16x9 && npx --yes hyperframes@0.8.153 preview",
+    "preview:9x16": "cp ola.js 9x16/ && cd 9x16 && npx --yes hyperframes@0.8.153 preview",
+    "lint": "cp ola.js 16x9/ && cp ola.js 9x16/ && npx --yes hyperframes@0.8.153 lint 16x9 && npx --yes hyperframes@0.8.153 lint 9x16",
+    "render": "bash render-hoja.sh 16x9 && bash render-hoja.sh 9x16 270 && bash codificar.sh"
+  }
+}

@@ -1,0 +1,5 @@
+renders/
+node_modules/
+# Copias generadas por los scripts desde ../ola.js (la fuente es una sola)
+16x9/ola.js
+9x16/ola.js

@@ -1,0 +1,244 @@
+[
+  {
+    "id": "E1-T1",
+    "title": "Schema delta: mustChangePassword en User + migracion",
+    "epic": "01-cimientos-y-forzado",
+    "dependencies": [],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN `npx prisma validate` runs against `prisma/schema.prisma` THE SYSTEM SHALL exit 0.",
+      "WHEN `prisma/schema.prisma` is inspected THE SYSTEM SHALL show `mustChangePassword Boolean @default(false)` as a field of the `User` model.",
+      "WHEN `npx prisma migrate dev --name add_must_change_password` runs against the local database THE SYSTEM SHALL create a new migration directory under `prisma/migrations/` and apply it without error.",
+      "WHEN `npx prisma migrate status` runs afterward THE SYSTEM SHALL report the database schema up to date with no pending migrations.",
+      "WHEN the generated migration SQL is inspected THE SYSTEM SHALL show `mustChangePassword` added with a default of `false`, so every existing account keeps working without being forced through the change-password flow.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0, confirming the regenerated Prisma Client compiles against the updated schema."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "npx prisma validate",
+      "grep -q \"mustChangePassword\" prisma/schema.prisma",
+      "npx prisma migrate dev --name add_must_change_password",
+      "npx prisma migrate status",
+      "grep -q \"mustChangePassword\" prisma/migrations/*add_must_change_password*/migration.sql",
+      "grep -qi \"DEFAULT false\" prisma/migrations/*add_must_change_password*/migration.sql"
+    ],
+    "checkpoint": "step-01-schema-forzar-cambio",
+    "files": ["prisma/schema.prisma", "prisma/migrations/**"],
+    "status": "done"
+  },
+  {
+    "id": "E1-T2",
+    "title": "Nucleo de auth: mustChangePassword en JWT y session",
+    "epic": "01-cimientos-y-forzado",
+    "dependencies": ["E1-T1"],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN `types/next-auth.d.ts` is inspected THE SYSTEM SHALL declare `mustChangePassword: boolean` on both the `JWT` interface and `Session.user`.",
+      "WHEN the `jwt` callback in `lib/auth.ts` runs for any authenticated token THE SYSTEM SHALL re-query `User.mustChangePassword` from the database for that token's `id`, regardless of `role`, and assign the result to `token.mustChangePassword`.",
+      "WHEN the `session` callback in `lib/auth.ts` runs THE SYSTEM SHALL mirror `token.mustChangePassword` onto `session.user.mustChangePassword`.",
+      "WHEN `npx jest` runs THE SYSTEM SHALL still report the existing suite passing, since this step changes no `lib/landing/**`, `lib/productos.ts`, `lib/contacto.ts`, `lib/precios/**`, `lib/ubicaciones.ts` or `lib/utils/**` module.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0 with `mustChangePassword` type-checking cleanly wherever the augmented `next-auth` types are read."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "test \"$(grep -c 'mustChangePassword: boolean' types/next-auth.d.ts)\" = 2",
+      "grep -q \"select: { mustChangePassword: true }\" lib/auth.ts",
+      "grep -q \"session.user.mustChangePassword = token.mustChangePassword\" lib/auth.ts"
+    ],
+    "checkpoint": "step-02-jwt-mustchangepassword",
+    "files": ["types/next-auth.d.ts", "lib/auth.ts"],
+    "status": "done"
+  },
+  {
+    "id": "E1-T3",
+    "title": "Guarda de middleware para el cambio forzado",
+    "epic": "01-cimientos-y-forzado",
+    "dependencies": ["E1-T2"],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN an authenticated request carries `token.mustChangePassword === true` and requests a path other than `/cambiar-password`, `/login`, or one starting with `/api` THE SYSTEM SHALL redirect to `/cambiar-password`.",
+      "WHEN that same token requests `/cambiar-password` itself THE SYSTEM SHALL NOT redirect.",
+      "WHEN that same token requests a path starting with `/api` THE SYSTEM SHALL NOT redirect, so `fetch('/api/auth/session')` keeps working during the forced flow.",
+      "WHEN `token.mustChangePassword` is `false` or absent THE SYSTEM SHALL apply the existing `/admin` and `/chofer` guards exactly as before, unchanged.",
+      "WHEN `lib/auth/middleware.ts` is inspected THE SYSTEM SHALL implement the new gate as a single inline conditional inside `updateSession`, with no new exported function — matching the file's existing all-inline style."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "grep -q \"mustChangePassword === true\" lib/auth/middleware.ts",
+      "grep -q \"pathname !== '/cambiar-password'\" lib/auth/middleware.ts",
+      "grep -q \"pathname.startsWith('/api')\" lib/auth/middleware.ts",
+      "test \"$(grep -c '^export ' lib/auth/middleware.ts)\" = 1"
+    ],
+    "checkpoint": "step-03-middleware-forzado",
+    "files": ["lib/auth/middleware.ts"],
+    "status": "done"
+  },
+  {
+    "id": "E1-T4",
+    "title": "Componente PasswordInput con toggle mostrar/ocultar",
+    "epic": "01-cimientos-y-forzado",
+    "dependencies": [],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN `components/ui/PasswordInput.tsx` renders THE SYSTEM SHALL show a native `<input>` whose `type` starts as `password`.",
+      "WHEN a user activates the toggle `<button>` THE SYSTEM SHALL switch the underlying input's `type` to `text`, and activating it again SHALL switch it back to `password`.",
+      "WHEN the field is hidden THE SYSTEM SHALL set the toggle's `aria-label` to `Mostrar contraseña` and `aria-pressed=false`; WHEN visible THE SYSTEM SHALL set `aria-label` to `Ocultar contraseña` and `aria-pressed=true`.",
+      "WHEN `components/ui/PasswordInput.tsx` is inspected THE SYSTEM SHALL declare the toggle as a native `<button type=button>`, never a `<div>` with a click handler.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0, confirming the component type-checks standing alone, before any other file imports it.",
+      "WHEN `components/ui/PasswordInput.tsx` is measured THE SYSTEM SHALL be 300 lines or fewer."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "grep -q \"aria-pressed\" components/ui/PasswordInput.tsx",
+      "grep -q \"aria-label\" components/ui/PasswordInput.tsx",
+      "grep -q 'type=\"button\"' components/ui/PasswordInput.tsx",
+      "test \"$(wc -l < components/ui/PasswordInput.tsx)\" -le 300"
+    ],
+    "checkpoint": "step-04-password-input",
+    "files": ["components/ui/PasswordInput.tsx"],
+    "status": "done"
+  },
+  {
+    "id": "E1-T5",
+    "title": "Login adopta PasswordInput",
+    "epic": "01-cimientos-y-forzado",
+    "dependencies": ["E1-T4"],
+    "priority": "p1",
+    "acceptance": [
+      "WHEN `/login` renders THE SYSTEM SHALL show the password field via `PasswordInput` instead of a raw `input type=password`.",
+      "WHEN a visitor activates the reveal toggle on `/login` THE SYSTEM SHALL show the typed password in cleartext, and activating it again SHALL hide it.",
+      "WHEN a visitor submits valid credentials on `/login` THE SYSTEM SHALL still authenticate and redirect by role exactly as before.",
+      "WHEN `app/login/page.tsx` is inspected THE SYSTEM SHALL contain zero raw `input type=password` elements.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "grep -q \"PasswordInput\" app/login/page.tsx",
+      "grep -q 'type=\"password\"' app/login/page.tsx; test $? -eq 1"
+    ],
+    "checkpoint": "step-05-login-toggle",
+    "files": ["app/login/page.tsx"],
+    "status": "done"
+  },
+  {
+    "id": "E2-T1",
+    "title": "Accion cambiarPassword (autoservicio)",
+    "epic": "02-autoservicio-y-admin",
+    "dependencies": ["E1-T1", "E1-T3"],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN `app/cambiar-password/actions.ts` is inspected THE SYSTEM SHALL export a `use server` action `cambiarPassword(actual, nueva)` that loads the current user via `auth()` from `@/lib/auth` and returns `{ error: 'No autorizado' }` when there is no session.",
+      "WHEN the source is inspected THE SYSTEM SHALL gate on `bcrypt.compare(actual, user.password)` before accepting a new password, returning `{ error: 'La contraseña actual no es correcta' }` on mismatch.",
+      "WHEN the source is inspected THE SYSTEM SHALL reject a `nueva` shorter than 6 characters with a length-error message, matching the same rule already enforced in `crearChofer` and `resetPasswordChofer`.",
+      "WHEN the source is inspected THE SYSTEM SHALL reject `nueva === actual` with `{ error: 'La nueva contraseña debe ser distinta a la actual' }`, so the forced flow cannot be satisfied by resubmitting the same temporary password.",
+      "WHEN the source is inspected THE SYSTEM SHALL, on success, hash the new password with `bcrypt` at cost 12 and update `User.password` together with `mustChangePassword: false` in one `db.user.update` call.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0, confirming the new Server Action type-checks even though no page calls it yet."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "grep -q \"'use server'\" app/cambiar-password/actions.ts",
+      "grep -q \"bcrypt.compare(actual\" app/cambiar-password/actions.ts",
+      "grep -q \"La contraseña actual no es correcta\" app/cambiar-password/actions.ts",
+      "grep -q \"nuevaTrim.length < 6\" app/cambiar-password/actions.ts",
+      "grep -q \"nuevaTrim === actual\" app/cambiar-password/actions.ts",
+      "grep -q \"mustChangePassword: false\" app/cambiar-password/actions.ts"
+    ],
+    "checkpoint": "step-06-accion-cambiar-password",
+    "files": ["app/cambiar-password/actions.ts"],
+    "status": "done"
+  },
+  {
+    "id": "E2-T2",
+    "title": "UI de autoservicio /cambiar-password",
+    "epic": "02-autoservicio-y-admin",
+    "dependencies": ["E1-T4", "E2-T1"],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN an unauthenticated visitor requests `/cambiar-password` THE SYSTEM SHALL redirect to `/login`.",
+      "WHEN an authenticated user with `mustChangePassword=true` views `/cambiar-password` THE SYSTEM SHALL show copy explaining the password was admin-generated and must be replaced.",
+      "WHEN a visitor submits a `nueva` shorter than 6 characters, or a `confirmar` that does not match `nueva` THE SYSTEM SHALL show a client-side error and SHALL NOT call the `cambiarPassword` Server Action.",
+      "WHEN the `cambiarPassword` Server Action returns an error THE SYSTEM SHALL display it inline and keep the form on screen.",
+      "WHEN `cambiarPassword` succeeds THE SYSTEM SHALL redirect to the role-appropriate home (`admin` to `/admin/dashboard`, `visor` to `/admin/pedidos`, `chofer` to `/chofer`), the same mapping `app/login/page.tsx` already uses.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0, and both new files SHALL stay at or under 300 lines each."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "grep -q \"redirect('/login')\" app/cambiar-password/page.tsx",
+      "grep -q \"PasswordInput\" app/cambiar-password/CambiarPasswordForm.tsx",
+      "grep -q \"cambiarPassword\" app/cambiar-password/CambiarPasswordForm.tsx",
+      "grep -q \"/admin/dashboard\" app/cambiar-password/CambiarPasswordForm.tsx",
+      "grep -q \"/admin/pedidos\" app/cambiar-password/CambiarPasswordForm.tsx",
+      "grep -q \"'/chofer'\" app/cambiar-password/CambiarPasswordForm.tsx",
+      "test \"$(wc -l < app/cambiar-password/CambiarPasswordForm.tsx)\" -le 300",
+      "test \"$(wc -l < app/cambiar-password/page.tsx)\" -le 300"
+    ],
+    "checkpoint": "step-07-ui-cambiar-password",
+    "files": ["app/cambiar-password/page.tsx", "app/cambiar-password/CambiarPasswordForm.tsx"],
+    "status": "done"
+  },
+  {
+    "id": "E2-T3",
+    "title": "Admin: crearChofer y resetPasswordChofer prenden el flag",
+    "epic": "02-autoservicio-y-admin",
+    "dependencies": ["E2-T2"],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN `crearChofer` creates a new chofer account THE SYSTEM SHALL set `mustChangePassword: true` on the created `User` row, inside the same `$transaction` as today.",
+      "WHEN `resetPasswordChofer` resets a chofer's password THE SYSTEM SHALL set `mustChangePassword: true` on the updated `User` row, alongside the new password hash.",
+      "WHEN `editarChofer`, `eliminarChofer`, or `toggleActivoChofer` run THE SYSTEM SHALL be unchanged from their current behavior.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0.",
+      "WHEN `npx jest` runs THE SYSTEM SHALL still report the existing suite passing, since no `lib/**` module is touched by this step."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "test \"$(grep -c 'mustChangePassword: true' app/admin/choferes/actions.ts)\" = 2"
+    ],
+    "checkpoint": "step-08-chofer-forzar-temporal",
+    "files": ["app/admin/choferes/actions.ts"],
+    "status": "done"
+  },
+  {
+    "id": "E2-T4",
+    "title": "Admin: crearUsuarioVisor prende el flag",
+    "epic": "02-autoservicio-y-admin",
+    "dependencies": ["E2-T2"],
+    "priority": "p0",
+    "acceptance": [
+      "WHEN `crearUsuarioVisor` creates a new visor account THE SYSTEM SHALL set `mustChangePassword: true` on the created `User` row.",
+      "WHEN `app/admin/usuarios/actions.ts` is inspected THE SYSTEM SHALL show exactly one occurrence of `mustChangePassword: true`, inside `crearUsuarioVisor`'s `db.user.create` call — no reset-password action exists for visor accounts, and none is added by this blueprint.",
+      "WHEN `eliminarUsuarioVisor` runs THE SYSTEM SHALL be unchanged from its current behavior.",
+      "WHEN `npm run build` and `npx jest` run THE SYSTEM SHALL both exit 0."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "test \"$(grep -c 'mustChangePassword: true' app/admin/usuarios/actions.ts)\" = 1"
+    ],
+    "checkpoint": "step-09-visor-forzar-temporal",
+    "files": ["app/admin/usuarios/actions.ts"],
+    "status": "done"
+  },
+  {
+    "id": "E2-T5",
+    "title": "Nav: link a /cambiar-password en Sidebar y header de /chofer",
+    "epic": "02-autoservicio-y-admin",
+    "dependencies": ["E2-T2"],
+    "priority": "p1",
+    "acceptance": [
+      "WHEN an admin or visor views the sidebar's user section THE SYSTEM SHALL show a `Cambiar contraseña` link to `/cambiar-password`, positioned above `Cerrar Sesión`.",
+      "WHEN a chofer views the `/chofer` header THE SYSTEM SHALL show a link to `/cambiar-password` next to the existing sign-out control, without modifying `components/chofer/CerrarSesionBtn.tsx`.",
+      "WHEN both new links render THE SYSTEM SHALL use a native `Link`/anchor element, never a `<div>` with a click handler.",
+      "WHEN `npm run build` runs THE SYSTEM SHALL exit 0.",
+      "WHEN `npm run lint` runs THE SYSTEM SHALL exit 0 with zero warnings, confirming the added JSX passes the project's existing `next/core-web-vitals` accessibility rules."
+    ],
+    "verify": [
+      "npm run lint && npx jest && npm run build",
+      "grep -q 'href=\"/cambiar-password\"' components/admin/Sidebar.tsx",
+      "grep -q 'href=\"/cambiar-password\"' app/chofer/layout.tsx",
+      "grep -q \"CerrarSesionBtn\" app/chofer/layout.tsx",
+      "git diff --quiet -- components/chofer/CerrarSesionBtn.tsx"
+    ],
+    "checkpoint": "step-10-nav-cambiar-password",
+    "files": ["components/admin/Sidebar.tsx", "app/chofer/layout.tsx"],
+    "status": "done"
+  }
+]

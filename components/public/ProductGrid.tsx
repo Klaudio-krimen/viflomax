@@ -20,12 +20,12 @@ export function ProductGrid() {
   }
 
   return (
-    <section id="productos" className="scroll-mt-32 bg-white py-12 md:py-16">
+    <section id="productos" aria-labelledby="productos-titulo" className="scroll-mt-32 bg-white py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto px-6">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-viflomax-verde-700">Elige tu formato</p>
-            <h2 className="font-nunito text-3xl font-bold tracking-tight text-viflomax-azul-800 md:text-4xl">Agua, dispensadores y extras</h2>
+            <h2 id="productos-titulo" className="font-nunito text-3xl font-bold tracking-tight text-viflomax-azul-800 md:text-4xl">Agua, dispensadores y extras</h2>
           </div>
           <p className="max-w-xs text-sm leading-relaxed text-gray-600">
             Precio final en Maipú. Para otras comunas se confirma al hacer el pedido.
@@ -56,39 +56,42 @@ export function ProductGrid() {
             No hay productos en esta categoría
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {visibles.map((producto) => (
               <article
                 key={producto.nombre}
-                className={`group overflow-hidden rounded-2xl border border-viflomax-azul-300 ${
+                className={`overflow-hidden rounded-2xl border border-viflomax-azul-300 ${
                   producto.destacado
-                    ? 'bg-viflomax-azul-100 md:col-span-2 md:grid md:grid-cols-[0.8fr_1.2fr]'
-                    : 'flex flex-col bg-white'
+                    ? 'bg-viflomax-azul-100 md:col-span-2 md:grid md:grid-cols-[0.7fr_1.3fr] lg:col-span-3'
+                    : producto.categoria === 'agua' ? 'flex flex-col bg-white' : 'grid grid-cols-[112px_minmax(0,1fr)] bg-white md:flex md:flex-col'
                 }`}
               >
                 {/* Foto */}
-                <div className="relative aspect-[4/5] overflow-hidden bg-viflomax-azul-100">
-                  <ProductoImagen src={producto.imagen} alt={producto.nombre} />
-                </div>
+                <a href={producto.imagen} target="_blank" rel="noopener noreferrer" aria-label={`Ampliar imagen de ${producto.nombre} (se abre en una pestaña nueva)`} className={`relative block overflow-hidden bg-viflomax-azul-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-viflomax-azul-700 ${producto.destacado ? 'h-64 md:h-72' : producto.categoria === 'agua' ? 'h-56 md:h-60' : 'min-h-44 md:h-60'}`}>
+                  <ProductoImagen src={producto.imagen} alt={producto.nombre} sizes={producto.destacado ? '(max-width: 767px) calc(100vw - 48px), 400px' : producto.categoria === 'agua' ? '(max-width: 767px) calc(100vw - 48px), (max-width: 1023px) 50vw, 352px' : '(max-width: 767px) 112px, (max-width: 1023px) 50vw, 352px'} />
+                  <span aria-hidden="true" className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-viflomax-azul-800">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4"><path d="M14 4h6v6M20 4l-8 8M10 4H4v16h16v-6" /></svg>
+                  </span>
+                </a>
 
                 {/* Contenido */}
-                <div className={`flex flex-1 flex-col p-6 ${producto.destacado ? 'md:justify-center md:p-10' : ''}`}>
+                <div className={`flex min-w-0 flex-1 flex-col p-4 md:p-5 ${producto.destacado ? 'md:justify-center md:p-8' : ''}`}>
                   {producto.badge && (
-                    <span className="mb-4 w-fit rounded-full bg-viflomax-verde-700 px-3 py-1.5 text-xs font-bold text-white">{producto.badge}</span>
+                    <span className="mb-3 w-fit rounded-full bg-viflomax-verde-700 px-3 py-1.5 text-xs font-bold text-white">{producto.badge}</span>
                   )}
-                  <h3 className={`mb-2 font-nunito font-bold text-viflomax-azul-800 ${producto.destacado ? 'text-2xl md:text-3xl' : 'text-xl'}`}>
+                  <h3 className={`mb-2 font-nunito font-bold leading-tight text-viflomax-azul-800 ${producto.destacado ? 'text-2xl md:text-3xl' : 'text-lg md:text-xl'}`}>
                     {producto.nombre}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4 flex-1">
+                  <p className={`mb-3 text-sm leading-relaxed text-gray-600 ${producto.destacado ? '' : 'flex-1'}`}>
                     {producto.descripcion}
                   </p>
-                  <p className="text-viflomax-azul-800 font-extrabold text-2xl mb-4">
+                  <p className="mb-3 text-2xl font-extrabold text-viflomax-azul-800">
                     {formatCLP(producto.precio)}
                   </p>
                   <button
                     type="button"
                     onClick={() => irAlFormulario(producto.nombre)}
-                    className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-viflomax-verde-700 px-6 py-3 font-semibold text-white hover:bg-viflomax-verde-800 focus-visible:ring-2 focus-visible:ring-viflomax-azul-700"
+                    className={`inline-flex min-h-11 items-center justify-center rounded-full bg-viflomax-verde-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-viflomax-verde-800 focus-visible:ring-2 focus-visible:ring-viflomax-azul-700 ${producto.destacado ? 'md:w-fit md:px-8' : 'w-full'}`}
                   >
                     Pedir este
                   </button>

@@ -1,48 +1,41 @@
-# Entrega de portada aprobada
+# VFX-025 — Entrega lista para commit y push
 
-Carpeta única: **D:\CLAUDEKODE\viflomax**. Rama actual: **main**.
-Los agentes trabajan aquí, sin crear ramas ni worktrees, y cierran sus servidores locales al terminar.
-El humano hace commit y push; los agentes no publican.
+Carpeta única: **D:\CLAUDEKODE\viflomax**. Rama: **main**, base 7aa715a.
+Sin commit ni push realizados por Codex. Servidores 3000, 3001 y 3015 apagados.
 
-## Estado verificado el 2026-10-13
+## Resultado
 
-- La portada aprobada y sus ocho archivos de aplicación ya están en el commit `d55bf17` (Cambios graficosIV), incluido en el `main` local.
-- `main` local está cuatro commits por delante de `origin/main`. La consulta directa a GitHub confirma que `main` remoto sigue en `f626a0a`.
-- El commit `d55bf17` fue publicado en `claude/VFX-000-protocolo-agentes`; GitHub registra su despliegue Vercel como **Preview**, con estado success. El último despliegue registrado como **Production** corresponde a `f626a0a`.
-- El servidor de desarrollo de Viflomax fue cerrado y el puerto 3001 quedó sin listener.
-- Lint, 53 tests en 10 suites y build pasaron en esta carpeta para el código de la portada. Home: 5.42 kB / 101 kB First Load JS. Revisión de Claude APROBADA. No se ha verificado un despliegue nuevo en producción.
+- Bidón protagonista con PNG recortado y transparente; fuente comercial original intacta. Marca y palabras de la etiqueta verificadas visualmente, sin afirmar identidad pixel a pixel del edit de IA.
+- Hero sin marco de tarjeta, iluminación localizada, reflejo corto y título “Agua purificada. Tu casa abastecida.” Imagen visible desde el comienzo, entrada por transform y palabra por palabra.
+- Catálogo con nueve productos, fotos completas, ampliación en pestaña nueva, tres columnas desktop y accesorios horizontales en móvil. Filtros y pedido conservados.
+- Dirección de verano documentada: render físico y composición tipo After Effects. No se produjo ni integró un nuevo video en esta tarea.
 
-## Publicar la portada ya commiteada
+## Verificación
 
-Desde esta carpeta, el paso pendiente para enviar los cuatro commits locales de `main` es:
+Node 20.20.2. Lint sin errores/avisos, 53 tests en 10 suites, build de 42 páginas aprobado. Home 5.76 kB y First Load JS 101 kB; base previa 5.42 kB/101 kB (redondeados).
+
+QA sobre build local: 320/375/390/768/1440 px sin overflow; misma proporción de imagen/reflejo en tablet; nueve fotos cargadas; filtros 9/4/3/2; selección de los nueve nombres en formulario y ancla bajo el header.
+
+A 390 px, catálogo de 3533 px frente a 6715,25 px: reducción 47,4%. Snapshot Lighthouse móvil: accesibilidad, buenas prácticas y SEO 100. No es auditoría de rendimiento ni verificación en teléfono físico.
+
+Revisión independiente Claude Code: APROBADA tras corregir la proporción del hero en tablet. Registro y límites en VFX-025. Snapshot y revisión no sustituyen QA de producción después del push.
+
+PNG de fuente 1122x1402, RGBA, 1.382.712 B; muestra optimizada local WebP 69.362 B. Prompt y modo incorporado image_gen registrados junto al asset.
+
+## Commit y push del humano
+
+Desde esta misma carpeta, ejecutar:
 
 ```powershell
+git add app/globals.css components/public/Hero.tsx components/public/ProductGrid.tsx components/public/ProductoImagen.tsx public/productos/hero-bidon.png public/productos/hero-bidon.prompt.md .agents/tareas/VFX-025-impacto-visual-portada.md .agents/auditorias/2026-10-13-impacto-visual-portada.md .agents/auditorias/2026-10-13-direccion-verano-hero.md .agents/ENTREGA-PORTADA.md
+git commit -m "feat(landing): VFX-025 producto protagonista y catalogo compacto"
 git push origin main
 ```
 
-No hace falta volver a commitear los ocho archivos de aplicación: ya están en `d55bf17`.
-Después del push, verificar que Vercel genere un despliegue Production del nuevo commit y termine en Ready.
-El agente no ejecutó este comando.
+Sin dependencias nuevas. Sin cambios en endpoint, nombres/precios, contacto, formulario/provider, admin/chofer, package o lockfile. No agregar entornos, node_modules, .next ni archivos PWA generados.
 
-## Guardar las instrucciones de trabajo actualizadas
+## Dirección para el verano
 
-Estos archivos de coordinación siguen sin commit. El bloque lista archivos exactos y conserva los demás cambios del árbol compartido:
+Leer [asesoría de verano](auditorias/2026-10-13-direccion-verano-hero.md). Es una propuesta de siguiente fase: materiales con refracción, iluminación de estudio y composición, con el agua concentrada alrededor del producto.
 
-```powershell
-git add AGENTS.md CLAUDE.md .agents/PROTOCOLO.md .agents/decisiones/0001-protocolo-coordinacion.md .agents/decisiones/0004-trabajo-directo-en-main.md .agents/plantillas/tarea.md .agents/tareas/VFX-021-portada-aprobada.md .agents/ENTREGA-PORTADA.md
-git commit -m "docs(agentes): centralizar entrega en main y cerrar servidores al terminar"
-git push origin main
-```
-
-Se puede ejecutar este bloque antes del push anterior: su último comando también publica la portada ya commiteada.
-Los cambios de `.gitignore` y de la composición de video son trabajo separado y no se incluyen en este bloque.
-
-## Alcance de la portada
-
-Hero aprobado sin ola, animación pausada palabra por palabra, imagen comercial existente y galería completa de nueve productos.
-Contrato público, nombres, precios, datos de contacto, formulario, admin y chofer conservados.
-No hay nuevas dependencias. Los assets de video existentes no se integran en esta entrega.
-
-QA previo: 320 a 1440 px, nueve imágenes, filtros y selección de productos. La última corrección de carpeta verificó HTTP 200 con hero nuevo y nueve artículos en el puerto habitual.
-No se afirma QA en teléfono físico, LCP/INP medidos, autenticación de producción ni envío de pedidos reales.
-No agregar secretos, archivos de entorno, node_modules, .next ni archivos PWA generados al commit.
+El guion propuesto de 3,6 s requiere una enmienda posterior de la ADR 0003, hoy limitada a 2,4 s. Se deberán actualizar los plates a la nueva composición del hero antes de volver a renderizar VFX-023/VFX-024. No se cambió esa ADR ni sus assets.

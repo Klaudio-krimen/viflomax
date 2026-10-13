@@ -1,0 +1,6 @@
+Built-in image_gen edit; transparent_background=true.
+Edit target: public/productos/recarga-20l.jpg.
+Use case: background-extraction. Make a precise clean transparent-background cutout of ONLY the original blue water jug. Remove the surrounding blue backdrop, white light ring, water splash, floor reflection, and all outside props. Keep the original jug unchanged: its exact silhouette, blue cap, horizontal ridges, blue translucent material, condensation, 20L engraving and every pixel of the front Agua Viflomax Máxima Pureza label. Do not redraw, recolor, redesign, sharpen or retype the label. Keep exact lettering, green droplet logo and front view. Entire bottle from cap to bottom visible, upright, centered in a tightly framed portrait canvas with small transparent margins. Actual alpha transparency outside its silhouette; no new shadow, no ground, no card, no background and no new text. Inside the jug retain its source pixels/material; do not erase its blue tones to make it artificially see-through.
+
+Selected output: hero-bidon.png, 1122x1402, RGBA, 1382712 bytes.
+Visual inspection: brand wording and logo retained in appearance. This is an AI edit, not a claim of pixel-for-pixel identity. Source photograph remains intact. No further bitmap transformations were applied.

@@ -7,7 +7,7 @@ import Image from 'next/image'
  * Muestra la foto del producto. Si el archivo no existe todavía,
  * cae a un placeholder de marca en vez de romper la tarjeta.
  */
-export function ProductoImagen({ src, alt }: { src?: string; alt: string }) {
+export function ProductoImagen({ src, alt, sizes }: { src?: string; alt: string; sizes: string }) {
   const [falló, setFalló] = useState(false)
 
   if (!src || falló) {
@@ -25,7 +25,7 @@ export function ProductoImagen({ src, alt }: { src?: string; alt: string }) {
       src={src}
       alt={alt}
       fill
-      sizes="(max-width: 767px) calc(100vw - 48px), (max-width: 1152px) 50vw, 552px"
+      sizes={sizes}
       className="object-contain"
       onError={() => setFalló(true)}
     />

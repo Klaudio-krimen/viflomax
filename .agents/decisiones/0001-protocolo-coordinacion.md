@@ -1,7 +1,7 @@
 # 0001 — Coordinación Claude × Codex por archivos en el repo
 
 - **Fecha:** 2026-10-05
-- **Estado:** aceptada
+- **Estado:** aceptada; la parte de git (ramas, worktrees, merge) fue reemplazada por la [0004](0004-trabajo-directo-en-main.md)
 
 ## Contexto
 

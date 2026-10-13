@@ -8,7 +8,6 @@ revisor:                 # el otro agente
 area:                    # landing | admin | chofer | api | db | auth | infra | docs
 depende_de: []           # [VFX-001, ...]
 blueprint:               # opcional: <carpeta>/<id de tasks.json>
-rama:                    # claude/VFX-NNN-slug | codex/VFX-NNN-slug
 archivos: []             # candado: rutas o globs que esta tarea edita
 bloqueo:                 # solo si estado = bloqueada
 creado: AAAA-MM-DD
@@ -42,3 +41,13 @@ Pistas, riesgos, reglas diferidas a leer (`.claude/rules/…`).
 ## Revisión
 
 <!-- ### AAAA-MM-DD · agente revisa · CAMBIOS | APROBADA -->
+
+## Commit
+
+<!-- Lo deja el agente al pasar a en-revision. Claudio lo ejecuta tras APROBADA. Nunca `git add .`. -->
+
+```bash
+git add <archivo1> <archivo2> .agents/tareas/VFX-NNN-slug.md
+git commit -m "tipo(área): VFX-NNN descripción"
+git push
+```

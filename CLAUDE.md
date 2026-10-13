@@ -119,8 +119,9 @@ Leer el archivo que corresponda antes de editar esa área:
 ## Trabajo coordinado con Codex
 
 Este repo se trabaja en conjunto con Codex (que lee `AGENTS.md`). El contrato entre agentes es
-`.agents/PROTOCOLO.md`: una tarea por archivo en `.agents/tareas/`, candado por `archivos:`, rama
-`claude/VFX-NNN-slug`, revisión cruzada obligatoria y decisiones en `.agents/decisiones/`. Tablero:
+`.agents/PROTOCOLO.md`: una tarea por archivo en `.agents/tareas/`, candado por `archivos:`, **trabajo
+directo en `main` sin ramas ni worktrees** (al terminar se deja la sección `## Commit` con `git add`
+de archivos exactos para que Claudio haga commit + push), revisión cruzada obligatoria y decisiones en `.agents/decisiones/`. Tablero:
 `node scripts/agentes-tablero.mjs`. Rol de Claude: arquitecto, revisor y autor de las tareas
 transversales; al delegar a Codex, la tarea debe quedar `lista` con criterios verificables.
 

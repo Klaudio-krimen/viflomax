@@ -18,7 +18,7 @@ FFmpeg. Solo dibuja la **luz** del agua sobre negro puro: en la web se mezcla co
 | `npm run preview:16x9` / `preview:9x16` | Studio de HyperFrames para mover el cursor de tiempo |
 | `npm run render` | PNG de los dos cortes → hojas de contacto → `public/video/hero-ola-{16x9,9x16}.{mp4,webm}` + previews sobre el hero en `renders/` |
 
-`renders/` está ignorado por git. Para revisar sin abrir un video, mira `renders/hoja-*.png` (un cuadro cada 0,2 s).
+`renders/` está ignorado por git. Para revisar sin abrir un video, mira `renders/hoja-*.png` (la ola sola) y `renders/hoja-hero-*.png` (compuesta sobre el hero), con un cuadro cada 0,2 s.
 
 ## Estructura
 
@@ -28,6 +28,7 @@ FFmpeg. Solo dibuja la **luz** del agua sobre negro puro: en la web se mezcla co
 | `16x9/index.html` | Corte desktop 1440 × 810: el vaso se vuelca arriba a la derecha y la ola barre en diagonal |
 | `9x16/index.html` | Corte móvil 720 × 1280: la ola cae de arriba hacia abajo con una leve diagonal |
 | `render-hoja.sh`, `codificar.sh` | Render a PNG + hoja de contactos; codificación final y previews |
+| `plate-hero.html` | Réplica del fondo de `components/public/Hero.tsx` (azul-900 y dos manchas). `codificar.sh` la captura con Chrome headless (variable `CHROME` si no está en la ruta por defecto) y compone plate → ola en `screen` → scrim negro/30. **Si cambia el fondo del hero, hay que actualizarla** |
 
 El encuadre de cada corte se ajusta en los `data-ola-*` del `#root`: `ox` y `oy` son el labio del vaso
 (fracción del ancho y de la altura) y `dx` y `dy` son la dirección del flujo.
@@ -45,6 +46,6 @@ El encuadre de cada corte se ajusta en los `data-ola-*` del `#root`: `ox` y `oy`
 ## Reglas
 
 - Determinista: nada de `Math.random`, `Date.now` ni `requestAnimationFrame`. Todo depende de `t`.
-  Dos renders seguidos producen archivos idénticos byte a byte.
+  Los PNG y el MP4 son idénticos byte a byte entre renders; el WebM no (VP9 con `-row-mt 1`), aunque la imagen es la misma.
 - Colores de marca en el shader: `#2f9fd6` (cuerpo) y `#a3d9f0` (altas luces).
 - Presupuesto (ADR 0003): 16:9 ≤ 700 kB y 9:16 ≤ 400 kB por formato, sin pista de audio.

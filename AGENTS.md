@@ -23,12 +23,19 @@ Este repo lo trabajan Codex y Claude Code. **Antes de editar código, leer
 
 1. `node scripts/agentes-tablero.mjs` muestra el tablero. Tomar una tarea `lista` cuyo campo
    `archivos:` no choque con otra `en-curso`.
-2. Marcarla `en-curso` con `asignado: codex`, trabajar en la rama `codex/VFX-NNN-slug` (idealmente
-   en su propio `git worktree`) y no editar archivos fuera de `archivos:` sin anotarlo.
+2. Marcarla `en-curso` con `asignado: codex` y trabajar **directo en `main`, en esta misma carpeta**
+   (sin ramas ni worktrees, decisión `.agents/decisiones/0004`). No editar archivos fuera de
+   `archivos:` sin anotarlo: es la única protección, porque Claude trabaja en el mismo árbol.
 3. Al terminar: compuerta en verde, entrada en `## Bitácora`, estado `en-revision`,
-   `revisor: claude`. Claude no ve tu sesión: todo lo que deba saber va en el archivo de la tarea.
+   `revisor: claude`, y una sección `## Commit` con el bloque `git add <archivos exactos>` +
+   `git commit -m "…"` + `git push` listo para que Claudio lo copie. **Nunca `git add .`.**
+   Claude no ve tu sesión: todo lo que deba saber va en el archivo de la tarea.
 4. Si te toca revisar trabajo de Claude, escribe en `## Revisión` con `CAMBIOS` o `APROBADA`.
-5. Nunca push, merge a `main`, ni `prisma migrate` contra la base real: eso lo hace el humano.
+5. Nunca commit, push ni `prisma migrate` contra la base real: eso lo hace el humano. Push a `main`
+   publica en producción.
+6. Al terminar una tarea, cerrar los servidores de desarrollo o preview de Viflomax utilizados
+   para verificarla. Dejar todos sus archivos y las instrucciones de commit/push en esta misma
+   carpeta; no dejar servidores encendidos salvo pedido explícito del humano.
 
 ## Innegociable
 

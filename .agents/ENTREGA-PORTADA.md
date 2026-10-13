@@ -1,39 +1,48 @@
 # Entrega de portada aprobada
 
-Implementacion local terminada, compuerta verde y revision independiente de Claude aprobada. Commit/push/merge a cargo del humano.
+Carpeta única: **D:\CLAUDEKODE\viflomax**. Rama actual: **main**.
+Los agentes trabajan aquí, sin crear ramas ni worktrees, y cierran sus servidores locales al terminar.
+El humano hace commit y push; los agentes no publican.
 
-Abrir en Visual Studio Code **D:\CLAUDEKODE\viflomax**, rama actual **claude/VFX-000-protocolo-agentes**. El 2026-10-13 se aplico aqui el diff aprobado porque el servidor habitual del puerto 3001 servia esta carpeta y no el worktree auxiliar. No se cambio de rama ni se hizo commit, push o merge.
+## Estado verificado el 2026-10-13
 
-## Archivos de esta entrega para el commit
+- La portada aprobada y sus ocho archivos de aplicación ya están en el commit `d55bf17` (Cambios graficosIV), incluido en el `main` local.
+- `main` local está cuatro commits por delante de `origin/main`. La consulta directa a GitHub confirma que `main` remoto sigue en `f626a0a`.
+- El commit `d55bf17` fue publicado en `claude/VFX-000-protocolo-agentes`; GitHub registra su despliegue Vercel como **Preview**, con estado success. El último despliegue registrado como **Production** corresponde a `f626a0a`.
+- El servidor de desarrollo de Viflomax fue cerrado y el puerto 3001 quedó sin listener.
+- Lint, 53 tests en 10 suites y build pasaron en esta carpeta para el código de la portada. Home: 5.42 kB / 101 kB First Load JS. Revisión de Claude APROBADA. No se ha verificado un despliegue nuevo en producción.
 
-- app/(public)/page.tsx
-- app/globals.css
-- components/public/Hero.tsx
-- components/public/ProductGrid.tsx
-- components/public/ProductoImagen.tsx
-- components/public/SiteHeader.tsx
-- components/public/SiteFooter.tsx
-- components/public/WhatsAppFloat.tsx
-- .agents/tareas/VFX-021-portada-aprobada.md
-- .agents/tareas/VFX-022-galeria-aprobada.md
-- .agents/ENTREGA-PORTADA.md
+## Publicar la portada ya commiteada
 
-Mensaje sugerido: `feat(landing): VFX-021 VFX-022 integrar portada aprobada y galeria completa`.
+Desde esta carpeta, el paso pendiente para enviar los cuatro commits locales de `main` es:
 
-## Validacion
+```powershell
+git push origin main
+```
 
-Node 20.20.2; lint verde; Jest 53 tests en 10 suites; build verde; diff-check limpio. Browser local sobre build de produccion: viewports 320 a 1440 px, nueve imagenes, filtros, seleccion de todos los productos y anclas. Lighthouse snapshot movil: accesibilidad 100. Revision Claude APROBADA y condicion del destacado verificada. Detalle y limites en las bitacoras de las dos tareas.
+No hace falta volver a commitear los ocho archivos de aplicación: ya están en `d55bf17`.
+Después del push, verificar que Vercel genere un despliegue Production del nuevo commit y termine en Ready.
+El agente no ejecutó este comando.
 
-No se incluye la ola descartada ni su imagen generada. La referencia HTML queda en la carpeta original como maqueta; no es necesaria para servir la portada real. Se preservan formulario, endpoint, precios y nombres vigentes.
+## Guardar las instrucciones de trabajo actualizadas
 
-## Limites y pasos posteriores
+Estos archivos de coordinación siguen sin commit. El bloque lista archivos exactos y conserva los demás cambios del árbol compartido:
 
-Sin commit, push, merge, pedidos reales ni verificacion de produccion. Home First Load JS final 101 kB frente a 100 kB de base (valores redondeados); no se agrega JS para animacion. LCP/INP reales y telefono fisico no medidos. El entorno local existente necesita NEXTAUTH_SECRET para autenticar con npm start; no se editaron archivos de entorno ni se afirma configuracion de Vercel verificada.
+```powershell
+git add AGENTS.md CLAUDE.md .agents/PROTOCOLO.md .agents/decisiones/0001-protocolo-coordinacion.md .agents/decisiones/0004-trabajo-directo-en-main.md .agents/plantillas/tarea.md .agents/tareas/VFX-021-portada-aprobada.md .agents/ENTREGA-PORTADA.md
+git commit -m "docs(agentes): centralizar entrega en main y cerrar servidores al terminar"
+git push origin main
+```
 
-En Windows, detener el servidor de este worktree antes de repetir build: la DLL Prisma cargada por npm start puede bloquear prisma generate con EPERM. Se utilizaron dependencias aisladas via npm ci, respetando el lockfile. Ningun archivo de entorno, node_modules, .next o archivos PWA generados debe agregarse al commit.
+Se puede ejecutar este bloque antes del push anterior: su último comando también publica la portada ya commiteada.
+Los cambios de `.gitignore` y de la composición de video son trabajo separado y no se incluyen en este bloque.
 
-El protocolo de coordinacion completo vive en la carpeta original/rama de Claude y aun no esta integrado en main. Los claims y handoffs de estas tareas se espejaron alli para que Claude pueda consultarlos sin depender de la conversacion.
+## Alcance de la portada
 
-La correccion de ubicacion conserva todos los trabajos de Claude y sus assets de video. El video no se integra en esta entrega. La verificacion actual de esta carpeta se registra en VFX-021/VFX-022.
+Hero aprobado sin ola, animación pausada palabra por palabra, imagen comercial existente y galería completa de nueve productos.
+Contrato público, nombres, precios, datos de contacto, formulario, admin y chofer conservados.
+No hay nuevas dependencias. Los assets de video existentes no se integran en esta entrega.
 
-Correccion verificada en carpeta habitual: lint OK, 53 tests OK, build OK; http://localhost:3001 entrega HTTP 200 con hero nuevo (4 palabras animadas) y 9 productos. El servidor de desarrollo permanece en ese puerto. Los 8 archivos son identicos al diff aprobado por Claude. Commit/push pendientes del humano.
+QA previo: 320 a 1440 px, nueve imágenes, filtros y selección de productos. La última corrección de carpeta verificó HTTP 200 con hero nuevo y nueve artículos en el puerto habitual.
+No se afirma QA en teléfono físico, LCP/INP medidos, autenticación de producción ni envío de pedidos reales.
+No agregar secretos, archivos de entorno, node_modules, .next ni archivos PWA generados al commit.

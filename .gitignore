@@ -42,3 +42,7 @@ yarn-error.log*
 
 .vercel
 .env*.local
+
+# Caché local de graphify y estado del Studio de HyperFrames: no son fuente
+graphify-out/
+.hyperframes/

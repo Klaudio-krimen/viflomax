@@ -8,8 +8,8 @@ revisor: codex
 area: landing
 depende_de: []
 blueprint:
-rama: claude/VFX-023-ola-shader
-archivos: [design_handoff_landing_redesign/agua-viva/video/**, public/video/hero-ola-*]
+rama:
+archivos: [design_handoff_landing_redesign/agua-viva/video/**, public/video/hero-ola-*, .agents/decisiones/0003-video-ola-hero.md]
 bloqueo:
 creado: 2026-10-13
 actualizado: 2026-10-13
@@ -65,5 +65,22 @@ integración en la web es VFX-024.
   ⚠ `npm run build` falla **antes** de Next, en `prisma generate`: EPERM al renombrar `query_engine-windows.dll.node`, porque otros procesos node tienen tomado el DLL (posiblemente el `next dev` de Codex). Este cambio no toca Prisma ni TypeScript. Hay que repetirla con los servidores apagados antes del merge.
 - Entorno: FFmpeg 9.0.2 instalado con winget (en `%LOCALAPPDATA%\Microsoft\WinGet\Links`).
 - Siguiente: Codex revisa (look, pesos, scripts). Después, VFX-024 integra el video en el hero.
+
+### 2026-10-13 · claude · nota (revisión del plan con Claudio)
+- Claudio confirma que la ola sigue en pie como **capa de temporada** sobre la portada aprobada en VFX-021 (que se aprobó "sin ola"). Se enmienda la ADR 0003 §4: el H1 conserva el ritmo pausado, pero solo con `transform`, y la imagen y las palabras quedan con opacidad 1 desde el cuadro 0.
+- El preview sobre el hero estaba compuesto sobre un degradado azul→verde que no es el hero real. Ahora `codificar.sh` captura con Chrome headless `plate-hero.html` (réplica del fondo de `Hero.tsx`: azul-900 y dos manchas difusas) y compone plate → ola en `screen` → scrim negro/30. Sobre el azul-900 real los brillos se leen bien: **no hace falta subir la exposición** y los entregables no cambian. También genera `renders/hoja-hero-*.png`.
+- **Corrección a la bitácora anterior:** el MP4 sí es reproducible byte a byte, pero el **WebM (VP9 con `-row-mt 1`) no lo es**: al recodificar cambian los bytes, aunque no la imagen. Se restauraron los WebM commiteados para no generar un diff vacío. Si hace falta determinismo estricto, hay que quitar `-row-mt 1`.
+- `.hyperframes/` sale del índice de git (`git rm --cached`); ya estaba en `.gitignore`.
+- `rama:` vacío (ADR 0004). El asset ya está en `main` desde `d602a27`.
+- Siguiente: Codex revisa el look sobre `renders/hoja-hero-*.png` y `preview-hero-*.mp4` (`npm run render` los regenera), los pesos y los scripts.
+
+## Commit
+
+```bash
+git add design_handoff_landing_redesign/agua-viva/video/.gitignore design_handoff_landing_redesign/agua-viva/video/codificar.sh design_handoff_landing_redesign/agua-viva/video/plate-hero.html design_handoff_landing_redesign/agua-viva/video/README.md .agents/decisiones/0003-video-ola-hero.md .agents/tareas/VFX-023-video-ola-asset.md .agents/tareas/VFX-024-integrar-video-ola-hero.md
+git add -u design_handoff_landing_redesign/agua-viva/video/16x9/.hyperframes design_handoff_landing_redesign/agua-viva/video/9x16/.hyperframes
+git commit -m "chore(landing): VFX-023 preview de la ola sobre el hero real y enmienda de la ADR 0003"
+git push
+```
 
 ## Revisión

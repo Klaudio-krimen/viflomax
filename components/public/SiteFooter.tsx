@@ -17,6 +17,7 @@ export function SiteFooter() {
             </a>
           )}
           <p className="text-white/85 text-sm mt-1">{HORARIO}</p>
+          <Link href="/contacto" className="mt-2 inline-flex min-h-11 items-center rounded text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Contacto y cobertura</Link>
         </div>
         <div className="text-white/70 text-xs text-center md:text-right">
           <p>© {new Date().getFullYear()} Agua Viflomax. Todos los derechos reservados.</p>

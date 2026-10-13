@@ -2,16 +2,10 @@
 
 import { useState } from 'react'
 import { CATEGORIAS, PRODUCTOS, formatCLP, filtrarPorCategoria, type CategoriaId } from '@/lib/productos'
-import { generarGotas } from '@/lib/landing/gotas'
 import { ProductoImagen } from './ProductoImagen'
-import { LluviaDeGotas } from './LluviaDeGotas'
 import { usePedido } from './PedidoProvider'
 
 type Filtro = 'todos' | CategoriaId
-
-// Nivel de módulo: la misma lluvia en el render del servidor y al hidratar.
-// azul-300 (#a3d9f0) sobre el fondo blanco de la sección.
-const GOTAS_PRODUCTOS = generarGotas(7, 16, '#a3d9f0')
 
 export function ProductGrid() {
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -22,28 +16,29 @@ export function ProductGrid() {
   const irAlFormulario = (nombreProducto: string) => {
     setProductoSeleccionado(nombreProducto)
     window.location.hash = 'pedido'
+    document.getElementById('pedido')?.scrollIntoView({ behavior: 'auto', block: 'start' })
   }
 
   return (
-    <section id="productos" className="relative py-16 bg-gray-50 overflow-hidden scroll-mt-24">
-      <LluviaDeGotas gotas={GOTAS_PRODUCTOS} />
-
+    <section id="productos" className="scroll-mt-32 bg-white py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto px-6">
-        <div className="text-center mb-8">
-          <h2 className="font-nunito text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-            Nuestros Productos
-          </h2>
-          <p className="text-gray-600 text-lg">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-viflomax-verde-700">Elige tu formato</p>
+            <h2 className="font-nunito text-3xl font-bold tracking-tight text-viflomax-azul-800 md:text-4xl">Agua, dispensadores y extras</h2>
+          </div>
+          <p className="max-w-xs text-sm leading-relaxed text-gray-600">
             Precio final en Maipú. Para otras comunas se confirma al hacer el pedido.
           </p>
         </div>
 
         {/* Filtros por categoría */}
-        <div className="flex flex-wrap justify-center gap-2 mb-10">
+        <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filtrar productos">
           {([{ id: 'todos', label: 'Todos' }, ...CATEGORIAS] as { id: Filtro; label: string }[]).map((c) => (
             <button
               key={c.id}
               type="button"
+              aria-pressed={filtro === c.id}
               onClick={() => setFiltro(c.id)}
               className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-viflomax-azul-700 ${
                 filtro === c.id
@@ -61,29 +56,27 @@ export function ProductGrid() {
             No hay productos en esta categoría
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {visibles.map((producto) => (
               <article
                 key={producto.nombre}
-                className={`group bg-white rounded-2xl overflow-hidden flex flex-col transition-shadow duration-200 hover:shadow-lg ${
+                className={`group overflow-hidden rounded-2xl border border-viflomax-azul-300 ${
                   producto.destacado
-                    ? 'border-2 border-viflomax-verde shadow-md'
-                    : 'border border-gray-200 shadow-sm'
+                    ? 'bg-viflomax-azul-100 md:col-span-2 md:grid md:grid-cols-[0.8fr_1.2fr]'
+                    : 'flex flex-col bg-white'
                 }`}
               >
                 {/* Foto */}
-                <div className="relative aspect-square bg-white border-b border-gray-100">
+                <div className="relative aspect-[4/5] overflow-hidden bg-viflomax-azul-100">
                   <ProductoImagen src={producto.imagen} alt={producto.nombre} />
-                  {producto.badge && (
-                    <span className="absolute top-3 left-3 bg-viflomax-verde-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                      {producto.badge}
-                    </span>
-                  )}
                 </div>
 
                 {/* Contenido */}
-                <div className="flex flex-col flex-1 p-5">
-                  <h3 className="font-nunito font-bold text-gray-900 text-lg mb-1">
+                <div className={`flex flex-1 flex-col p-6 ${producto.destacado ? 'md:justify-center md:p-10' : ''}`}>
+                  {producto.badge && (
+                    <span className="mb-4 w-fit rounded-full bg-viflomax-verde-700 px-3 py-1.5 text-xs font-bold text-white">{producto.badge}</span>
+                  )}
+                  <h3 className={`mb-2 font-nunito font-bold text-viflomax-azul-800 ${producto.destacado ? 'text-2xl md:text-3xl' : 'text-xl'}`}>
                     {producto.nombre}
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed mb-4 flex-1">
@@ -95,7 +88,7 @@ export function ProductGrid() {
                   <button
                     type="button"
                     onClick={() => irAlFormulario(producto.nombre)}
-                    className="w-full inline-flex items-center justify-center bg-viflomax-verde-700 hover:bg-viflomax-verde-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-viflomax-azul-700"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-viflomax-verde-700 px-6 py-3 font-semibold text-white hover:bg-viflomax-verde-800 focus-visible:ring-2 focus-visible:ring-viflomax-azul-700"
                   >
                     Pedir este
                   </button>

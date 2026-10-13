@@ -10,7 +10,7 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contactar por WhatsApp"
-      className="fixed bottom-6 right-6 z-40 bg-green-500 hover:bg-green-600 rounded-full p-4 shadow-lg transition-colors duration-200"
+      className="fixed bottom-6 right-6 z-40 hidden rounded-full bg-green-500 p-4 shadow-lg hover:bg-green-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-viflomax-azul-700 sm:inline-flex"
     >
       {/* WhatsApp SVG icon */}
       <svg

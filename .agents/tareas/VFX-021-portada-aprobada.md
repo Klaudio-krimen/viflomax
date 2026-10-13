@@ -59,3 +59,14 @@ Pendiente de Claude Code; no aprobar la propia implementacion.
 - Revision independiente mediante Claude Code CLI de solo lectura; segunda pasada aprobada. Primera pasada CAMBIOS: bandas blancas en destacado y acceso Contacto mobile. Ambos corregidos.
 - Condicion de aprobacion verificada por Codex contra lib/productos.ts: exactamente un destacado, en indice 0, Recarga 20 Litros. No se cambia el orden ni los datos del catalogo.
 - Claude no realizo browser QA; las observaciones visuales y de interaccion anteriores son de Codex. Veredicto copiado de la respuesta independiente, no autoaprobacion del implementador.
+
+### 2026-10-13 · codex · correccion de ubicacion de entrega
+- El humano reporta que no ve cambios. Verificacion actual: el servidor Next dev de puerto 3001 sirve D:/CLAUDEKODE/viflomax; los ocho archivos de landing de esa carpeta son identicos a main f626a0a. La implementacion sigue sin commit en el worktree auxiliar.
+- Se aplicara el mismo diff aprobado al working tree de la carpeta habitual, conservando la rama claude/VFX-000-protocolo-agentes y los trabajos de Claude. Excepcion operativa al aislamiento por rama para corregir la entrega solicitada por el humano; sin commit, push ni merge. Sin tareas en-curso que choquen con estos archivos.
+- Se repetira compuerta y QA en el puerto habitual; VFX-023/VFX-024 se conservan sin implementar en esta correccion.
+
+### 2026-10-13 · codex · correccion de ubicacion verificada → en-revision
+- Diff aprobado aplicado en D:/CLAUDEKODE/viflomax sobre claude/VFX-000-protocolo-agentes, sin cambiar rama, commit, push ni merge. Los ocho archivos coinciden byte a byte con la implementacion revisada por Claude; no hay cambios nuevos de diseno.
+- Compuerta repetida en la carpeta habitual bajo Node 20.20.2: npm run lint sin errores/avisos, npx jest --runInBand 10 suites/53 tests aprobados, npm run build codigo 0 con 42 paginas. Home 5.42 kB / 101 kB First Load JS. git diff --check limpio.
+- Servidor dev habitual reiniciado en http://localhost:3001. Verificacion HTTP 200 del HTML servido: hero nuevo id=inicio, cuatro spans hero-palabra, imagen recarga-20l, nueve articles de productos, sin video ni el hero antiguo. La revision visual completa previa sigue correspondiendo al mismo codigo; no se declara nueva inspeccion visual completa de navegador en esta correccion.
+- Conservados contrato, precios, contacto, dependencias y trabajo de Claude, incluyendo sus assets y tareas de video. .agents/ENTREGA-PORTADA.md ahora apunta a la carpeta habitual; el worktree auxiliar se conserva como respaldo.

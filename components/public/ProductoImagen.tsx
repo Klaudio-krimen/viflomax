@@ -25,8 +25,8 @@ export function ProductoImagen({ src, alt }: { src?: string; alt: string }) {
       src={src}
       alt={alt}
       fill
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-      className="object-contain p-4"
+      sizes="(max-width: 767px) calc(100vw - 48px), (max-width: 1152px) 50vw, 552px"
+      className="object-contain"
       onError={() => setFalló(true)}
     />
   )

@@ -16,7 +16,7 @@ export default function HomePage() {
         <ProductGrid />
         <PorQueElegirnos />
         <Cobertura />
-        <section id="pedido" className="scroll-mt-24 py-16 bg-white">
+        <section id="pedido" className="scroll-mt-32 py-16 bg-white">
           <PedidoForm />
         </section>
       </PedidoProvider>

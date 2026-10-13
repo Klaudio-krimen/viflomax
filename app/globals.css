@@ -30,9 +30,44 @@
   pointer-events: none;
 }
 
+.hero-palabra-mascara {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.hero-palabra { display: inline-block; }
+.hero-producto { transform: rotate(-4deg); }
+.hero-reflejo::after {
+  content: '';
+  position: absolute;
+  inset: -50% -100%;
+  background: linear-gradient(110deg, transparent 45%, rgb(255 255 255 / 0.15) 50%, transparent 55%);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-palabra { animation: hero-palabra 1.1s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(500ms + var(--indice) * 180ms); }
+  .hero-intro { animation: hero-aparecer 1s cubic-bezier(.22, 1, .36, 1) 1.1s both; }
+  .hero-imagen-entrada { animation: hero-aparecer 1.15s cubic-bezier(.22, 1, .36, 1) 1.2s both; }
+  .hero-producto { animation: hero-flotar 4.5s ease-in-out; }
+  .hero-reflejo::after { animation: hero-reflejo 2.3s cubic-bezier(.22, 1, .36, 1) 1.6s both; }
+  @keyframes hero-palabra { from { opacity: 0; transform: translateY(112%); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes hero-aparecer { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes hero-flotar { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-7px) rotate(-2.5deg); } }
+  @keyframes hero-reflejo { 0% { transform: translateX(-45%); opacity: 0; } 30%, 70% { opacity: 1; } 100% { transform: translateX(45%); opacity: 0; } }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .logo-float,
-  .water-drop {
+  .water-drop,
+  .hero-palabra,
+  .hero-intro,
+  .hero-imagen-entrada,
+  .hero-producto,
+  .hero-reflejo::after {
     animation: none;
   }
 }
